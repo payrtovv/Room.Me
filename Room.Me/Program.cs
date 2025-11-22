@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Room.Me.Models;
+using Room.Me.Data;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +9,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<RoomMeDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 
 var app = builder.Build();
