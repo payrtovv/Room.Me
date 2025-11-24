@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
-namespace Room.Me.Models
+namespace Room.Me.Data
 {
     public class User
     {

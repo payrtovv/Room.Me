@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-using Room.Me.Models;
+using Room.Me.Data;
 using System;
 
 namespace Room.Me.Controllers
