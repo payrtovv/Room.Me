@@ -1,18 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-
 using Room.Me.Data;
-using System;
 
 namespace Room.Me.Controllers
 {
-
     [ApiController]
     [Route("api/[controller]")]
-    public class Access : ControllerBase
+    public class AccessController : ControllerBase
     {
         private readonly RoomMeDbContext _context;
 
-        public Access(RoomMeDbContext context)
+        public AccessController(RoomMeDbContext context)
         {
             _context = context;
         }
