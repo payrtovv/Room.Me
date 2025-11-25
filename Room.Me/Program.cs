@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Room.Me.Models;
+using Room.Me.Data;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,7 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowCredentials());
 });
+
 
 var app = builder.Build();
 
