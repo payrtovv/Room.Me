@@ -5,7 +5,10 @@ using System;
 
 namespace Room.Me.Controllers
 {
-    public class Access : Controller
+
+    [ApiController]
+    [Route("api/[controller]")]
+    public class Access : ControllerBase
     {
         private readonly RoomMeDbContext _context;
 
@@ -14,16 +17,20 @@ namespace Room.Me.Controllers
             _context = context;
         }
 
-        [HttpPost]
-        public IActionResult Register(User user)
+        [HttpPost("Register")]
+        public IActionResult Register([FromBody] User user)
         {
             if (!ModelState.IsValid)
-                return View(user);
+                return BadRequest(ModelState);
 
             _context.Users.Add(user);
             _context.SaveChanges();
 
-            return RedirectToAction("Login");
+            return Ok(new
+            {
+                message = "Usuario registrado correctamente",
+                user
+            });
         }
     }
 }
