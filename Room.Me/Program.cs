@@ -18,7 +18,7 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials());
-});
+}); 
 
 
 var app = builder.Build();
