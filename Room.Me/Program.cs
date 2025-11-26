@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using Room.Me.Models;
 using Room.Me.Data;
-using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddSingleton<SendgidEmailServices>();
 
 builder.Services.AddDbContext<RoomMeDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -32,7 +32,6 @@ if (!app.Environment.IsDevelopment())
 app.UseCors("AllowVue");
 
 app.UseAuthorization();
-
 
 app.MapControllers();
 
