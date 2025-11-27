@@ -10,6 +10,11 @@ namespace Room.Me.Data
         public String Password { get; set; }
         public String Name { get; set; }
         public String Surname { get; set; }
+        //nullable 
+        public string? VerificationCode { get; set; }
+        //nullable 
+        public DateTime? CodeExpiration { get; set; }
+        public bool IsVerified { get; set; }
 
     }
 }

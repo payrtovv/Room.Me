@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Room.Me.Data;
 using Room.Me.Models;
-using Microsoft.AspNetCore.Identity;
-using System.Threading.Tasks;
 
 
 namespace Room.Me.Controllers
@@ -66,22 +66,34 @@ namespace Room.Me.Controllers
 
         //metodo para enviar codigo de verificacion
         [HttpPost("SendCode")]
-        public async Task<IActionResult> SendCode([FromBody]Emaildto dto)
+        public async Task<IActionResult> SendCode([FromBody]String email)
         {
             //Validar correo
 
-            if (string.IsNullOrWhiteSpace(dto.Email) || !dto.Email.Contains('@'))
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
             {
                 return BadRequest(new { message = "Correo inválido" });
             }
 
             try
             {
-                // Crear código aleatorio de 4 dígitos
+                //Crear numero aleatorio de 4 digitos
+
                 string code = new Random().Next(1000, 9999).ToString();
 
-                // Enviar correo
-                await _emailService.SendEmailCode(dto.Email, code);
+                //Verificar si el usuario existe
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                //si el usuario existe, guardar el codigo y la expiracion
+                if (user != null)
+                {
+                    user.VerificationCode = code;
+                    user.CodeExpiration = DateTime.UtcNow.AddMinutes(10); // expira en 10 min
+                    await _context.SaveChangesAsync();
+                }
+
+
+                // Enviar correo con servicio de email
+                await _emailService.SendEmailCode(email, code);
 
                 return Ok(new
                 {
@@ -95,6 +107,57 @@ namespace Room.Me.Controllers
                 return BadRequest(new
                 {
                     message = "No se pudo enviar el correo",
+                    error = ex.Message
+                });
+            }
+        }
+
+        [HttpPost("VerificateCode")]
+        public async Task<IActionResult> VerificateCode([FromBody] VerifyCodeDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                //Buscar usuario por email
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+
+                //si el usuario no existe
+                if (user == null)
+                {
+                    return NotFound(new
+                    {
+                        message = "Usuario no encontrado"
+                    });
+                }
+
+                //si el codigo no es igual o ya expiro
+
+                if (user.VerificationCode != dto.VerificationCode || user.CodeExpiration < DateTime.UtcNow)
+                {
+                    return BadRequest(new
+                    {
+                        message = "Código inválido o expirado"
+                    });
+                }else
+                {
+                    //marcar usuario como verificado
+                    user.IsVerified = true;
+                    user.VerificationCode = null;
+                    user.CodeExpiration = null;
+                    await _context.SaveChangesAsync();
+                    return Ok(new
+                    {
+                        message = "Código verificado correctamente"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    message = "Error al verificar el código",
                     error = ex.Message
                 });
             }
