@@ -17,6 +17,7 @@ public class SendgidEmailServices
 
     public async Task SendEmailCode(string Email, string codigo)
     {
+        //nuevo mensaje
         var msg = new SendGridMessage()
         {
             From = new EmailAddress(_fromEmail, _fromName),
@@ -25,6 +26,7 @@ public class SendgidEmailServices
         };
         msg.AddTo(new EmailAddress(Email));
 
+        //se manda el mensaje
         var response = await _client.SendEmailAsync(msg);
 
         if (!response.IsSuccessStatusCode)
