@@ -193,7 +193,9 @@ namespace Room.Me.Controllers
             {
                 Email = dto.Email,
                 Name = dto.Name,
-                Surname = dto.Surname
+                Surname = dto.Surname,
+                Gender = dto.Gender,
+                Age = dto.Age
             };
 
             //guardar usuario con contraseña hasheada
@@ -213,7 +215,9 @@ namespace Room.Me.Controllers
                     user.Id,
                     user.Email,
                     user.Name,
-                    user.Surname
+                    user.Surname, 
+                    user.Gender, 
+                    user.Age
                 }
             });
         }
