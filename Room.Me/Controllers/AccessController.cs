@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Room.Me.Data;
 using Room.Me.Models;
+using System.Threading.Tasks;
 
 
 namespace Room.Me.Controllers
@@ -167,59 +168,74 @@ namespace Room.Me.Controllers
 
         //metodo para registrar usuario
         [HttpPost("Register")]
-        public IActionResult Register([FromBody] RegisterDto dto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            //validar modelo
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            //buscar usuario por email
-            var User = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
-
-            //si el usuario ya existe
-            if (User != null)
+            try
             {
-                return Conflict(new
+                //validar modelo
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                //buscar usuario por email
+                var User = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
+
+                //si el usuario ya existe
+                if (User != null)
                 {
-                    message = "Esta email ya esta registrado"
+                    return Conflict(new
+                    {
+                        message = "Esta email ya esta registrado"
+                    });
+                }
+
+                //hash de la contraseña
+                var hasher = new PasswordHasher<User>();
+
+                //crear usuario
+                var user = new User
+                {
+                    Email = dto.Email,
+                    Name = dto.Name,
+                    Surname = dto.Surname,
+                    Gender = dto.Gender,
+                    Age = dto.Age
+                };
+
+                //guardar usuario con contraseña hasheada
+
+                user.Password = hasher.HashPassword(user, dto.Password);
+
+                //Subir a la base de datos
+                _context.Users.Add(user);
+                _context.SaveChanges();
+
+                await SendCode(dto.Email);
+
+                //retornar mensaje 
+                return Ok(new
+                {
+                    message = "Usuario registrado correctamente",
+                    user = new
+                    {
+                        user.Id,
+                        user.Email,
+                        user.Name,
+                        user.Surname,
+                        user.Gender,
+                        user.Age
+                    }
                 });
+
+            }catch(Exception Ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Ocurrió un error interno. Inténtalo más tarde."
+                });
+
             }
 
-            //hash de la contraseña
-            var hasher = new PasswordHasher<User>();
 
-            //crear usuario
-            var user = new User
-            {
-                Email = dto.Email,
-                Name = dto.Name,
-                Surname = dto.Surname,
-                Gender = dto.Gender,
-                Age = dto.Age
-            };
-
-            //guardar usuario con contraseña hasheada
-
-            user.Password = hasher.HashPassword(user, dto.Password);
-
-            //Subir a la base de datos
-            _context.Users.Add(user);
-            _context.SaveChanges();
-
-            //retornar mensaje 
-            return Ok(new
-            {
-                message = "Usuario registrado correctamente",
-                user = new
-                {
-                    user.Id,
-                    user.Email,
-                    user.Name,
-                    user.Surname, 
-                    user.Gender, 
-                    user.Age
-                }
-            });
         }
     }
 }
