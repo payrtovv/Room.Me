@@ -11,5 +11,7 @@ namespace Room.Me.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Preferences> Preferences { get; set; }
+        public DbSet<UserPreferences> UserPreferences { get; set; } 
     }
 }

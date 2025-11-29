@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Room.Me.Data;
 
@@ -11,9 +12,11 @@ using Room.Me.Data;
 namespace Room.Me.Migrations
 {
     [DbContext(typeof(RoomMeDbContext))]
-    partial class RoomMeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251129042056_AddPreferencesTable")]
+    partial class AddPreferencesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
