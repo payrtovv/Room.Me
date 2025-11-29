@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Room.Me.Data;
-using Room.Me.Models;
+using Room.Me.Dtos;
 using System.Threading.Tasks;
 
 
@@ -236,6 +236,99 @@ namespace Room.Me.Controllers
             }
 
 
+        }
+
+        [HttpPost("EditUser")]
+        public async Task<ActionResult> EditUser([FromBody] EditUserDto Dto)
+        {
+            try
+            {
+                //Buscar User por id
+                
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == Dto.Id);
+                if (user == null)
+                {
+                    return NotFound(new
+                    {
+                        message = "Usuario no encontrado"
+                    });
+                }
+                else
+                {
+                    //Editar datos del usuario
+                    user.Name = Dto.Name;
+                    user.Surname = Dto.Surname;
+                    user.Gender = Dto.Gender;
+                    user.Age = Dto.Age;
+
+                    //Subir cambios a la base de datos
+                    await _context.SaveChangesAsync();  
+
+                    return Ok(new
+                    {
+                        message = "Usuario editado correctamente",
+                        user = new
+                        {
+                            user.Name,
+                            user.Surname,
+                            user.Gender,
+                            user.Age
+                        }
+                    });
+                }
+            }
+            catch (Exception Ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Ocurrió un error interno. Inténtalo más tarde."
+                });
+
+            }
+        }
+        //Metodo para obtener la info de un User por ID
+        [HttpGet("GetInfoUser/{Id}")]
+        public async Task<IActionResult> GetInfoUser(int Id)
+        {
+            try
+            {
+    
+                //Buscamos usuario por Id
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == Id);
+
+                //Si no se encuentra
+                if ( user == null)
+                {
+                    return NotFound(new
+                    {
+                        message = "Usuario no encontrado"
+                    });
+                }
+                else
+                {
+                    //Si se encuentra 
+                    return Ok(new
+                    {
+                        user = new
+                        {
+                            user.Id,
+                            user.Email,
+                            user.Name,
+                            user.Surname,
+                            user.Age,
+                            user.Gender
+                        }
+                    });
+                }
+
+            }catch(Exception Ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Ocurrió un error interno. Inténtalo más tarde."
+                });
+            }
+           
         }
     }
 }

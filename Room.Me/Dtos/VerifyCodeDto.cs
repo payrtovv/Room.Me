@@ -1,4 +1,4 @@
-﻿namespace Room.Me.Models
+﻿namespace Room.Me.Dtos
 {
     public class VerifyCodeDto
     {

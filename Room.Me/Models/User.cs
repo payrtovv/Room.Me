@@ -12,6 +12,8 @@ namespace Room.Me.Data
         public String Surname { get; set; }
         public String Gender { get; set; }
         public int Age { get; set; }
+
+        //Esto es para la verificación de email
         //nullable 
         public string? VerificationCode { get; set; }
         //nullable 
