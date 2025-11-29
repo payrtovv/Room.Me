@@ -1,8 +1,14 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Room.Me.Data;
 using Room.Me.Dtos;
+using Room.Me.Services;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 
@@ -16,17 +22,22 @@ namespace Room.Me.Controllers
         private readonly RoomMeDbContext _context;
         //servicio de verificacion de email
         private readonly SendgidEmailServices _emailService;
+        //Servucio de JWT
+        private readonly JwtService _config;
+
 
         //accesos a la base de datos y al servicio de email
-        public AccessController(RoomMeDbContext context, SendgidEmailServices emailService)
+        public AccessController(RoomMeDbContext context, SendgidEmailServices emailService, JwtService config)
         {
             _context = context;
             _emailService = emailService;
+            _config = config;
         }
+
 
         //metodo para iniciar sesion
         [HttpPost("Login")]
-        public IActionResult Login([FromBody] LoginDto login) {
+        public async Task<IActionResult> Login([FromBody] LoginDto login) {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -44,6 +55,9 @@ namespace Room.Me.Controllers
             //hash de la contraseña
             var hasher = new PasswordHasher<User>();
 
+            //Generar token JTW
+            var Token = _config.GenerateToken(User.Id, User.Email);
+
             //Comparar contraseñas
             var result = hasher.VerifyHashedPassword(User, User.Password, login.Password);
 
@@ -56,6 +70,7 @@ namespace Room.Me.Controllers
             return Ok(new
             {
                 message = "Inicio de sesión exitoso",
+                token = Token,
                 User = new
                 {
                     User.Id,
@@ -145,8 +160,8 @@ namespace Room.Me.Controllers
                 {
                     //marcar usuario como verificado
                     user.IsVerified = true;
-                    user.VerificationCode = null;
-                    user.CodeExpiration = null;
+                    user.VerificationCode = null; // Borrar el código después de la verificación
+                    user.CodeExpiration = null; // Borrar la expiración después de la verificación
                     await _context.SaveChangesAsync();
                     return Ok(new
                     {
@@ -237,15 +252,27 @@ namespace Room.Me.Controllers
 
 
         }
-
+        
+        [Authorize]
         [HttpPost("EditUser")]
         public async Task<ActionResult> EditUser([FromBody] EditUserDto Dto)
         {
             try
             {
+                //Obtener UserID del token
+                var userIdString = User.FindFirst("id")?.Value;
+
+                //Ver si el token es valido
+                if (userIdString == null)
+                    return Unauthorized(new { message = "Token inválido" });
+
+                //Convertir a int
+                int userId = int.Parse(userIdString);
+
+
                 //Buscar User por id
-                
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == Dto.Id);
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user == null)
                 {
                     return NotFound(new
@@ -287,6 +314,7 @@ namespace Room.Me.Controllers
             }
         }
         //Metodo para obtener la info de un User por ID
+        [Authorize]
         [HttpGet("GetInfoUser/{Id}")]
         public async Task<IActionResult> GetInfoUser(int Id)
         {
@@ -330,5 +358,7 @@ namespace Room.Me.Controllers
             }
            
         }
+
+
     }
 }
