@@ -1,8 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Room.Me.Data;
-using Room.Me.Models;
+using Room.Me.Dtos;
+using Room.Me.Services;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
 
 
 namespace Room.Me.Controllers
@@ -15,17 +22,22 @@ namespace Room.Me.Controllers
         private readonly RoomMeDbContext _context;
         //servicio de verificacion de email
         private readonly SendgidEmailServices _emailService;
+        //Servucio de JWT
+        private readonly JwtService _config;
+
 
         //accesos a la base de datos y al servicio de email
-        public AccessController(RoomMeDbContext context, SendgidEmailServices emailService)
+        public AccessController(RoomMeDbContext context, SendgidEmailServices emailService, JwtService config)
         {
             _context = context;
             _emailService = emailService;
+            _config = config;
         }
+
 
         //metodo para iniciar sesion
         [HttpPost("Login")]
-        public IActionResult Login([FromBody] LoginDto login) {
+        public async Task<IActionResult> Login([FromBody] LoginDto login) {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -43,6 +55,9 @@ namespace Room.Me.Controllers
             //hash de la contraseña
             var hasher = new PasswordHasher<User>();
 
+            //Generar token JTW
+            var Token = _config.GenerateToken(User.Id, User.Email);
+
             //Comparar contraseñas
             var result = hasher.VerifyHashedPassword(User, User.Password, login.Password);
 
@@ -55,6 +70,7 @@ namespace Room.Me.Controllers
             return Ok(new
             {
                 message = "Inicio de sesión exitoso",
+                token = Token,
                 User = new
                 {
                     User.Id,
@@ -144,8 +160,8 @@ namespace Room.Me.Controllers
                 {
                     //marcar usuario como verificado
                     user.IsVerified = true;
-                    user.VerificationCode = null;
-                    user.CodeExpiration = null;
+                    user.VerificationCode = null; // Borrar el código después de la verificación
+                    user.CodeExpiration = null; // Borrar la expiración después de la verificación
                     await _context.SaveChangesAsync();
                     return Ok(new
                     {
@@ -167,59 +183,182 @@ namespace Room.Me.Controllers
 
         //metodo para registrar usuario
         [HttpPost("Register")]
-        public IActionResult Register([FromBody] RegisterDto dto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            //validar modelo
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            //buscar usuario por email
-            var User = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
-
-            //si el usuario ya existe
-            if (User != null)
+            try
             {
-                return Conflict(new
+                //validar modelo
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                //buscar usuario por email
+                var User = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
+
+                //si el usuario ya existe
+                if (User != null)
                 {
-                    message = "Esta email ya esta registrado"
+                    return Conflict(new
+                    {
+                        message = "Esta email ya esta registrado"
+                    });
+                }
+
+                //hash de la contraseña
+                var hasher = new PasswordHasher<User>();
+
+                //crear usuario
+                var user = new User
+                {
+                    Email = dto.Email,
+                    Name = dto.Name,
+                    Surname = dto.Surname,
+                    Gender = dto.Gender,
+                    Age = dto.Age
+                };
+
+                //guardar usuario con contraseña hasheada
+
+                user.Password = hasher.HashPassword(user, dto.Password);
+
+                //Subir a la base de datos
+                _context.Users.Add(user);
+                _context.SaveChanges();
+
+                await SendCode(dto.Email);
+
+                //retornar mensaje 
+                return Ok(new
+                {
+                    message = "Usuario registrado correctamente",
+                    user = new
+                    {
+                        user.Id,
+                        user.Email,
+                        user.Name,
+                        user.Surname,
+                        user.Gender,
+                        user.Age
+                    }
                 });
+
+            }catch(Exception Ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Ocurrió un error interno. Inténtalo más tarde."
+                });
+
             }
 
-            //hash de la contraseña
-            var hasher = new PasswordHasher<User>();
 
-            //crear usuario
-            var user = new User
-            {
-                Email = dto.Email,
-                Name = dto.Name,
-                Surname = dto.Surname,
-                Gender = dto.Gender,
-                Age = dto.Age
-            };
-
-            //guardar usuario con contraseña hasheada
-
-            user.Password = hasher.HashPassword(user, dto.Password);
-
-            //Subir a la base de datos
-            _context.Users.Add(user);
-            _context.SaveChanges();
-
-            //retornar mensaje 
-            return Ok(new
-            {
-                message = "Usuario registrado correctamente",
-                user = new
-                {
-                    user.Id,
-                    user.Email,
-                    user.Name,
-                    user.Surname, 
-                    user.Gender, 
-                    user.Age
-                }
-            });
         }
+        
+        [Authorize]
+        [HttpPost("EditUser")]
+        public async Task<ActionResult> EditUser([FromBody] EditUserDto Dto)
+        {
+            try
+            {
+                //Obtener UserID del token
+                var userIdString = User.FindFirst("id")?.Value;
+
+                //Ver si el token es valido
+                if (userIdString == null)
+                    return Unauthorized(new { message = "Token inválido" });
+
+                //Convertir a int
+                int userId = int.Parse(userIdString);
+
+
+                //Buscar User por id
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user == null)
+                {
+                    return NotFound(new
+                    {
+                        message = "Usuario no encontrado"
+                    });
+                }
+                else
+                {
+                    //Editar datos del usuario
+                    user.Name = Dto.Name;
+                    user.Surname = Dto.Surname;
+                    user.Gender = Dto.Gender;
+                    user.Age = Dto.Age;
+
+                    //Subir cambios a la base de datos
+                    await _context.SaveChangesAsync();  
+
+                    return Ok(new
+                    {
+                        message = "Usuario editado correctamente",
+                        user = new
+                        {
+                            user.Name,
+                            user.Surname,
+                            user.Gender,
+                            user.Age
+                        }
+                    });
+                }
+            }
+            catch (Exception Ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Ocurrió un error interno. Inténtalo más tarde."
+                });
+
+            }
+        }
+        //Metodo para obtener la info de un User por ID
+        [Authorize]
+        [HttpGet("GetInfoUser/{Id}")]
+        public async Task<IActionResult> GetInfoUser(int Id)
+        {
+            try
+            {
+    
+                //Buscamos usuario por Id
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == Id);
+
+                //Si no se encuentra
+                if ( user == null)
+                {
+                    return NotFound(new
+                    {
+                        message = "Usuario no encontrado"
+                    });
+                }
+                else
+                {
+                    //Si se encuentra 
+                    return Ok(new
+                    {
+                        user = new
+                        {
+                            user.Id,
+                            user.Email,
+                            user.Name,
+                            user.Surname,
+                            user.Age,
+                            user.Gender
+                        }
+                    });
+                }
+
+            }catch(Exception Ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Ocurrió un error interno. Inténtalo más tarde."
+                });
+            }
+           
+        }
+
+
     }
 }
