@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Room.Me.Data;
 using Room.Me.Dtos;
+using System.Threading.Tasks;
 
 namespace Room.Me.Controllers
 {
@@ -91,12 +93,11 @@ namespace Room.Me.Controllers
                     }
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new
                 {
-                    message = "Ocurrió un error al crear la preferencia.",
-                    error = ex.InnerException?.Message ?? ex.Message
+                    message = "Ocurrió un error al crear la preferencia."
                 });
             }
 
