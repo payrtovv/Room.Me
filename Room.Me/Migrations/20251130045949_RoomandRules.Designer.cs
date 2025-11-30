@@ -12,8 +12,8 @@ using Room.Me.Data;
 namespace Room.Me.Migrations
 {
     [DbContext(typeof(RoomMeDbContext))]
-    [Migration("20251130042656_RoomsAndRoomRules")]
-    partial class RoomsAndRoomRules
+    [Migration("20251130045949_RoomandRules")]
+    partial class RoomandRules
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -78,11 +78,10 @@ namespace Room.Me.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("RoomId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RuleId")
                         .HasColumnType("int");
 
                     b.Property<bool>("Value")
@@ -91,6 +90,8 @@ namespace Room.Me.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("RoomId");
+
+                    b.HasIndex("RuleId");
 
                     b.ToTable("RoomRules");
                 });
@@ -155,6 +156,23 @@ namespace Room.Me.Migrations
                     b.ToTable("Rooms");
                 });
 
+            modelBuilder.Entity("Rule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Rules");
+                });
+
             modelBuilder.Entity("Room.Me.Models.RoomRule", b =>
                 {
                     b.HasOne("Room.Me.Models.Rooms", "Room")
@@ -163,7 +181,15 @@ namespace Room.Me.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Rule", "Rule")
+                        .WithMany("RoomRules")
+                        .HasForeignKey("RuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Room");
+
+                    b.Navigation("Rule");
                 });
 
             modelBuilder.Entity("Room.Me.Models.Rooms", b =>
@@ -180,6 +206,11 @@ namespace Room.Me.Migrations
             modelBuilder.Entity("Room.Me.Models.Rooms", b =>
                 {
                     b.Navigation("RoomRule");
+                });
+
+            modelBuilder.Entity("Rule", b =>
+                {
+                    b.Navigation("RoomRules");
                 });
 #pragma warning restore 612, 618
         }

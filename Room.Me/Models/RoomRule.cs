@@ -8,12 +8,17 @@ namespace Room.Me.Models
     {
         [Key]
         public int Id { get; set; }
-        public string Name { get; set; }
-        public bool Value { get; set; }
 
+        // FK hacia Room
         [ForeignKey("Room")]
         public int RoomId { get; set; }
-
         public Rooms Room { get; set; } = null!;
+
+        // FK hacia Rule
+        [ForeignKey("Rule")]
+        public int RuleId { get; set; }
+        public Rule Rule { get; set; } = null!;
+
+        public bool Value { get; set; }
     }
 }

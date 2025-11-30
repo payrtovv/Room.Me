@@ -16,6 +16,9 @@ namespace Room.Me.Data
 
         public DbSet<RoomRule> RoomRules { get; set; }
 
+        public DbSet<Rule> Rules { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -24,6 +27,13 @@ namespace Room.Me.Data
                 .HasMany(r => r.RoomRule)
                 .WithOne(rr => rr.Room)
                 .HasForeignKey(rr => rr.RoomId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            modelBuilder.Entity<Rule>()
+                .HasMany(r => r.RoomRules)
+                .WithOne(rr => rr.Rule)
+                .HasForeignKey(rr => rr.RuleId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
 

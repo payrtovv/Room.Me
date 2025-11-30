@@ -5,7 +5,7 @@
 namespace Room.Me.Migrations
 {
     /// <inheritdoc />
-    public partial class RoomsAndRoomRules : Migration
+    public partial class RoomandRules : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -43,14 +43,27 @@ namespace Room.Me.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Rules",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Rules", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RoomRules",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Value = table.Column<bool>(type: "bit", nullable: false),
-                    RoomId = table.Column<int>(type: "int", nullable: false)
+                    RoomId = table.Column<int>(type: "int", nullable: false),
+                    RuleId = table.Column<int>(type: "int", nullable: false),
+                    Value = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -61,12 +74,23 @@ namespace Room.Me.Migrations
                         principalTable: "Rooms",
                         principalColumn: "IdRoom",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RoomRules_Rules_RuleId",
+                        column: x => x.RuleId,
+                        principalTable: "Rules",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoomRules_RoomId",
                 table: "RoomRules",
                 column: "RoomId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RoomRules_RuleId",
+                table: "RoomRules",
+                column: "RuleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Rooms_IdUserHost",
@@ -82,6 +106,9 @@ namespace Room.Me.Migrations
 
             migrationBuilder.DropTable(
                 name: "Rooms");
+
+            migrationBuilder.DropTable(
+                name: "Rules");
         }
     }
 }
