@@ -22,83 +22,6 @@ namespace Room.Me.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Room.Me.Data.Preferences", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("AllowGuests")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("AllowParties")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("AllowSmoking")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsOrganized")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsQuiet")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("LikesMusic")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("PetFriendly")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("WakesUpEarly")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Preferences");
-                });
-
-            modelBuilder.Entity("Room.Me.Data.Tags", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Cleanliness")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Personality")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Pets")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Routine")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Smoking")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Visits")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Tags");
-                });
-
             modelBuilder.Entity("Room.Me.Data.User", b =>
                 {
                     b.Property<int>("Id")
@@ -141,44 +64,7 @@ namespace Room.Me.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Room.Me.Data.UserPreferences", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("AllowGuests")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("AllowParties")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("AllowSmoking")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsOrganized")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsQuiet")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("LikesMusic")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("PetFriendly")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("WakesUpEarly")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserPreferences");
+                    b.ToTable("Users", (string)null);
                 });
 #pragma warning restore 612, 618
         }
