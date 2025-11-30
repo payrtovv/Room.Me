@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Room.Me.Models;
+using System.ComponentModel.DataAnnotations;
 namespace Room.Me.Data;
 public class Preferences
 {

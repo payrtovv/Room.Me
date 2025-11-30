@@ -18,6 +18,7 @@ namespace Room.Me.Controllers
             _context = context;
         }
 
+        /*
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll()
         {
@@ -100,7 +101,8 @@ namespace Room.Me.Controllers
                     message = "Ocurrió un error al crear la preferencia."
                 });
             }
-
+        
         }
+        */
     }
 }
