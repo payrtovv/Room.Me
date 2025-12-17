@@ -18,6 +18,9 @@ namespace Room.Me.Data
 
         public DbSet<Rule> Rules { get; set; }
 
+        public DbSet<Preference> Preferences { get; set; }
+        public DbSet<UserPreference> UserPreferences { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,11 +38,48 @@ namespace Room.Me.Data
                 .WithOne(rr => rr.Rule)
                 .HasForeignKey(rr => rr.RuleId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserPreference>()
+                .HasKey(up => new { up.UserId, up.PreferenceId });
+
+            modelBuilder.Entity<UserPreference>()
+                .HasOne(up => up.User)
+                .WithMany(u => u.UserPreferences)
+                .HasForeignKey(up => up.UserId);
+
+            modelBuilder.Entity<UserPreference>()
+                .HasOne(up => up.Preference)
+                .WithMany(p => p.UserPreferences)
+                .HasForeignKey(up => up.PreferenceId);
+
+            // seed data for Preferences
+            modelBuilder.Entity<Preference>().HasData(
+            
+                new Preference { Id = 1, Category = "personality", Label = "Extrovertido", Value = "extrovert" },
+                new Preference { Id = 2, Category = "personality", Label = "Ambivertido", Value = "ambivert" },
+                new Preference { Id = 3, Category = "personality", Label = "Introvertido", Value = "introvert" },
+
+                new Preference { Id = 4, Category = "schedule", Label = "Madrugador", Value = "early_bird" },
+                new Preference { Id = 5, Category = "schedule", Label = "Horario Flexible", Value = "flexible" },
+                new Preference { Id = 6, Category = "schedule", Label = "Nocturno", Value = "night_owl" },
+
+                new Preference { Id = 7, Category = "cleanliness", Label = "Super Ordenado", Value = "neat" },
+                new Preference { Id = 8, Category = "cleanliness", Label = "Orden Normal", Value = "average" },
+                new Preference { Id = 9, Category = "cleanliness", Label = "Desordenado", Value = "messy" },
+
+                new Preference { Id = 10, Category = "pets", Label = "Tengo Mascotas", Value = "has_pets" },
+                new Preference { Id = 11, Category = "pets", Label = "Acepto Mascotas", Value = "ok_with" },
+                new Preference { Id = 12, Category = "pets", Label = "Cero Mascotas", Value = "none" },
+
+                new Preference { Id = 13, Category = "visits", Label = "Casa de Fiesta", Value = "party_house" },
+                new Preference { Id = 14, Category = "visits", Label = "Visitas Moderadas", Value = "occasional" },
+                new Preference { Id = 15, Category = "visits", Label = "Sin Visitas", Value = "private" },
+
+                new Preference { Id = 16, Category = "habits", Label = "Fumador", Value = "smoker" },
+                new Preference { Id = 17, Category = "habits", Label = "Fumo afuera", Value = "outside_only" },
+                new Preference { Id = 18, Category = "habits", Label = "No fumador", Value = "non_smoker" }
+            );
         }
 
-
-        //public DbSet<Preferences> Preferences { get; set; }
-        //public DbSet<UserPreferences> UserPreferences { get; set; } 
-        //public DbSet<Tags> Tags { get; set; }
     }
 }
