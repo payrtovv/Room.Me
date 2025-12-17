@@ -1,15 +1,22 @@
 ﻿using Room.Me.Models;
 using System.ComponentModel.DataAnnotations;
-namespace Room.Me.Data;
-public class Preferences
+
+namespace Room.Me.Data
 {
-    public int Id { get; set; }
-    public bool PetFriendly { get; set; }
-    public bool AllowSmoking { get; set; }
-    public bool AllowGuests { get; set; }
-    public bool AllowParties { get; set; }
-    public bool? LikesMusic { get; set; }
-    public bool? IsOrganized { get; set; }
-    public bool? WakesUpEarly { get; set; }
-    public bool? IsQuiet { get; set; }
+    public class Preference
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public string Category { get; set; } 
+
+        [Required]
+        public string Label { get; set; }    
+
+        [Required]
+        public string Value { get; set; }    
+
+        public ICollection<UserPreference> UserPreferences { get; set; }
+    }
 }

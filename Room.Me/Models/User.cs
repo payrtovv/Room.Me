@@ -20,5 +20,7 @@ namespace Room.Me.Data
         public DateTime? CodeExpiration { get; set; }
         public bool IsVerified { get; set; }
 
+        //Relación con UserPreference
+        public ICollection<UserPreference> UserPreferences { get; set; }
     }
 }

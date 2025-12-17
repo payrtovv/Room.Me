@@ -18,91 +18,76 @@ namespace Room.Me.Controllers
             _context = context;
         }
 
-        /*
-        [HttpGet("GetAll")]
-        public async Task<IActionResult> GetAll()
+        [HttpGet]
+        public async Task<IActionResult> GetAllPreferences()
         {
-            try
-            {
-                var prefs = await _context.Preferences
-                    .Select(p => new PreferenceDto
+            var preferences = await _context.Preferences.ToListAsync();
+            var groupedPreferences = preferences
+                .GroupBy(p => p.Category)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(p => new PreferenceItemDto
                     {
                         Id = p.Id,
-                        PetFriendly = p.PetFriendly,
-                        AllowSmoking = p.AllowSmoking,
-                        AllowGuests = p.AllowGuests,
-                        AllowParties = p.AllowParties,
-                        LikesMusic = p.LikesMusic,
-                        IsOrganized = p.IsOrganized,
-                        WakesUpEarly = p.WakesUpEarly,
-                        IsQuiet = p.IsQuiet
-                    })
-                    .ToListAsync();
+                        Label = p.Label,
+                        Value = p.Value
+                    }).ToList()
+                );
 
-                return Ok(new
-                {
-                    message = "Preferencias obtenidas",
-                    preferences = prefs
-                });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, new
-                {
-                    message = "No se pudo obtener las preferencias."
-                });
-            }
+            return Ok(groupedPreferences);
         }
 
-        [HttpPost("Create")]
-        public async Task<IActionResult> Create([FromBody] CreatePreferenceDto dto)
+        // Endpoint -> Post: api/preferences/user
+
+        [HttpPost("user")]
+        public async Task<IActionResult> SaveUserPreferences([FromBody] UserPreferencesUpdateDto dto)
         {
-            try
+
+            var user = await _context.Users
+                .Include(u => u.UserPreferences)
+                .FirstOrDefaultAsync(u => u.Id == dto.UserId);
+
+            if (user == null) return NotFound("Usuario no encontrado");
+
+            var existingPreferenceIds = await _context.Preferences
+                .Where(p => dto.PreferenceIds.Contains(p.Id))
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            if (user.UserPreferences.Any())
             {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-
-                var pref = new Preferences
-                {
-                    PetFriendly = dto.PetFriendly,
-                    AllowSmoking = dto.AllowSmoking,
-                    AllowGuests = dto.AllowGuests,
-                    AllowParties = dto.AllowParties,
-                    LikesMusic = dto.LikesMusic,
-                    IsOrganized = dto.IsOrganized,
-                    WakesUpEarly = dto.WakesUpEarly,
-                    IsQuiet = dto.IsQuiet
-                };
-
-                _context.Preferences.Add(pref);
-                await _context.SaveChangesAsync();
-
-                return Ok(new   
-                {
-                    message = "Preferencia creada correctamente",
-                    preference = new
-                    {
-                        pref.Id,
-                        pref.PetFriendly,
-                        pref.AllowSmoking,
-                        pref.AllowGuests,
-                        pref.AllowParties,
-                        pref.LikesMusic,
-                        pref.IsOrganized,
-                        pref.WakesUpEarly,
-                        pref.IsQuiet
-                    }
-                });
+                _context.UserPreferences.RemoveRange(user.UserPreferences);
             }
-            catch (Exception)
+
+            var newPreferences = existingPreferenceIds.Select(prefId => new UserPreference
             {
-                return StatusCode(500, new
-                {
-                    message = "Ocurrió un error al crear la preferencia."
-                });
-            }
-        
+                UserId = dto.UserId,
+                PreferenceId = prefId
+            });
+
+            await _context.UserPreferences.AddRangeAsync(newPreferences);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Preferencias actualizadas correctamente" });
         }
-        */
+
+        // Endpoint -> Get: api/preferences
+        // Endpoint para sacar de un usuario en específico -> Get: api/preferences/user/id del usuario
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetUserPreferences(int userId)
+        {
+            var userPreferences = await _context.UserPreferences
+                .Where(up => up.UserId == userId)
+                .Include(up => up.Preference)
+                .Select(up => new PreferenceItemDto
+                {
+                    Id = up.Preference.Id,
+                    Label = up.Preference.Label,
+                    Value = up.Preference.Value
+                })
+                .ToListAsync();
+
+            return Ok(userPreferences);
+        }
     }
 }

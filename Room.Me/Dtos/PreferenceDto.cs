@@ -1,15 +1,16 @@
 ﻿namespace Room.Me.Dtos
 {
-    public class PreferenceDto
+
+    public class PreferenceItemDto
     {
         public int Id { get; set; }
-        public bool PetFriendly { get; set; }
-        public bool AllowSmoking { get; set; }
-        public bool AllowGuests { get; set; }
-        public bool AllowParties { get; set; }
-        public bool? LikesMusic { get; set; }
-        public bool? IsOrganized { get; set; }
-        public bool? WakesUpEarly { get; set; }
-        public bool? IsQuiet { get; set; }
+        public string Label { get; set; }
+        public string Value { get; set; }
+    }
+
+    public class UserPreferencesUpdateDto
+    {
+        public int UserId { get; set; }
+        public List<int> PreferenceIds { get; set; }
     }
 }
