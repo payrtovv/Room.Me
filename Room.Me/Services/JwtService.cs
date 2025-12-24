@@ -8,19 +8,23 @@ namespace Room.Me.Services
 {
     public class JwtService
     {
-        private readonly IConfiguration _config;
+        private readonly string _jwtKey;
 
         public JwtService(IConfiguration config)
         {
-            _config = config;
+            _jwtKey = config["Jwt:Key"];
+            if(_jwtKey == null)
+            {
+                throw new Exception("La clave JWT no está configurada");
+            }
         }
 
         //Metodo para generar el token JWT
         public string GenerateToken(int userId, string email)
         {
-            //Crear clave con el Key del appsettings.json
+            //Crear clave con el Key de las variables de entorno
             var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_config["Jwt:Key"])
+                Encoding.UTF8.GetBytes(_jwtKey)
             );
 
             //Crear las credenciales 
@@ -35,8 +39,8 @@ namespace Room.Me.Services
 
             //Configurar el token
             var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
+                issuer: "RoomMeAPI",
+                audience: "RoomMeAPIUsers",
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: creds

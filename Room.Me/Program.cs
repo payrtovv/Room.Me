@@ -13,8 +13,19 @@ builder.Services.AddControllers();
 //Constructor para el servicio de envío de emails
 builder.Services.AddSingleton<SendgidEmailServices>();
 //Base de datos
+
+var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+
+
+if (string.IsNullOrWhiteSpace(conn))
+{
+    throw new Exception("Connection string no configurada");
+}
+
 builder.Services.AddDbContext<RoomMeDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(conn)
+);
+
 
 //configuración de CORS para coneccion con el front
 builder.Services.AddCors(options =>
@@ -29,11 +40,9 @@ builder.Services.AddCors(options =>
 
 
 //Configuración de JWT
-var jwtConfig = builder.Configuration.GetSection("Jwt");
 
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -42,10 +51,13 @@ builder.Services
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
 
-            ValidIssuer = jwtConfig["Issuer"],
-            ValidAudience = jwtConfig["Audience"],
+            ValidIssuer = "RoomMeAPI",
+            ValidAudience = "RoomMeAPIUsers",
+
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtConfig["Key"])
+                Encoding.UTF8.GetBytes(
+                    builder.Configuration["Jwt:Key"]
+                )
             )
         };
     });

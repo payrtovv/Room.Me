@@ -316,7 +316,6 @@ namespace Room.Me.Controllers
         {
             try
             {
-    
                 //Buscamos usuario por Id
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == Id);
 

@@ -5,28 +5,40 @@ using SendGrid.Helpers.Mail;
 public class SendgidEmailServices
 {
     private readonly SendGridClient _client;
-    private readonly string _fromEmail;
-    private readonly string _fromName;
+    private readonly EmailAddress _from;
+
 
     public SendgidEmailServices(IConfiguration config)
     {
-        _client = new SendGridClient(config["SendGrid:ApiKey"]);
-        _fromEmail = config["SendGrid:FromEmail"];
-        _fromName = config["SendGrid:FromName"];
+        //Obtener las keys de las variables de entorno
+        var apiKey = config["SendGrid"];
+
+        //Por si no ponen
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            throw new Exception("La API Key de SendGrid no está configurada");
+        }
+
+        //iniciamos coneccion 
+        _client = new SendGridClient(apiKey);
+        _from = new EmailAddress("payrtovv@gmail.com", "RoomMe");
     }
 
-    public async Task SendEmailCode(string Email, string codigo)
+    //metodo para mandar el email
+    public async Task SendEmailCode(string email, string codigo)
     {
-        //nuevo mensaje
-        var msg = new SendGridMessage()
+        //Creamos el mensaje
+        var msg = new SendGridMessage
         {
-            From = new EmailAddress(_fromEmail, _fromName),
+            From = _from,
             Subject = "Código de verificación",
-            HtmlContent = $"<h2>Tu código es: {codigo}</h2><p>Expira en 5 minutos.</p>"
+            HtmlContent = $@"
+                <h2>Tu código es: {codigo}</h2>
+                <p>Expira en 5 minutos.</p>"
         };
-        msg.AddTo(new EmailAddress(Email));
 
-        //se manda el mensaje
+        msg.AddTo(new EmailAddress(email));
+        //mandamos el mensaje con el cliente que creamos antes
         var response = await _client.SendEmailAsync(msg);
 
         if (!response.IsSuccessStatusCode)
@@ -34,5 +46,6 @@ public class SendgidEmailServices
             throw new Exception($"Error enviando correo: {response.StatusCode}");
         }
     }
+
 }
 
