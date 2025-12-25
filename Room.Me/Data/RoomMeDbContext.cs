@@ -39,6 +39,15 @@ namespace Room.Me.Data
                 .HasForeignKey(rr => rr.RuleId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Rule>().HasData(
+
+                new Rule { Id = 1, Name = "Fumar", IsMandatory = true },
+                new Rule { Id = 2, Name = "Mascotas", IsMandatory = true },
+                new Rule { Id = 3, Name = "Visitas", IsMandatory = true },
+                new Rule { Id = 4, Name = "Reuniones", IsMandatory = true },
+                new Rule { Id = 5, Name = "Alcohol", IsMandatory = true }
+               );
+
             modelBuilder.Entity<UserPreference>()
                 .HasKey(up => new { up.UserId, up.PreferenceId });
 
@@ -79,6 +88,8 @@ namespace Room.Me.Data
                 new Preference { Id = 17, Category = "habits", Label = "Fumo afuera", Value = "outside_only" },
                 new Preference { Id = 18, Category = "habits", Label = "No fumador", Value = "non_smoker" }
             );
+
+            
         }
 
     }
