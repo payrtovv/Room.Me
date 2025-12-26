@@ -10,6 +10,7 @@ public class Rule
     [MaxLength(200)]
     public string Name { get; set; }
 
+    //Pa las que son deley
     public bool IsMandatory { get; set; }
 
     public int? CreatedByUserId { get; set; }

@@ -39,6 +39,7 @@ namespace Room.Me.Data
                 .HasForeignKey(rr => rr.RuleId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            //Semilla de Reglas definidas
             modelBuilder.Entity<Rule>().HasData(
 
                 new Rule { Id = 1, Name = "Fumar", IsMandatory = true },
