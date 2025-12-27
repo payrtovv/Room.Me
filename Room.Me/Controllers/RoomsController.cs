@@ -101,6 +101,56 @@ namespace Room.Me.Controllers
                 });
             }
         }
+
+        //Para habitaciones propias
+        [Authorize]
+        [HttpGet("Getlocal/{idRoom}")]
+        public async Task<ActionResult> GetLocalRoom(int idroom)
+        {
+            var Userid = GetUserId();
+            if (Userid == null)
+                return Unauthorized();
+
+
+            var room = await _Context.Rooms
+                .Where(r => r.IdRoom == idroom && r.IdUserHost == Userid)
+                .Select(r => new
+                {
+                    r.Description,
+                    r.M2Space,
+                    r.Price,
+                    r.Direccion,
+                    r.City,
+                    r.NearTransport,
+                    r.NearCollege,
+                    r.IncludesElectricity,
+                    r.IncludesWater,
+                    r.IncludesInternet,
+                    r.IncludesGas,
+                    r.IncludesCleaning
+                })
+                .FirstOrDefaultAsync();
+
+            if (room == null)
+                return NotFound();
+
+
+            return Ok(room);
+        }
+
+
+        private int? GetUserId()
+        {
+            var userId = User.FindFirstValue("id");
+            if (int.TryParse(userId, out int id))
+            {
+                return id;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }
          
