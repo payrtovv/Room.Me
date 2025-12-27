@@ -5,6 +5,7 @@ using Room.Me.Data;
 using Room.Me.Dtos;
 using Room.Me.Models;
 using SendGrid.Helpers.Mail;
+using System.Data;
 using System.Security.Claims;
 
 namespace Room.Me.Controllers
@@ -48,6 +49,7 @@ namespace Room.Me.Controllers
                 if (roomRule == null)
                     return NotFound(new { message = "La regla no está asociada a la habitación" });
 
+               
                 //Cambiamos al valor 
                 roomRule.Value = dto.Value;
 
@@ -146,6 +148,23 @@ namespace Room.Me.Controllers
             }
         }
 
+        //Para obtener las que todos tienen que responder para cada habitacion 
+
+        [HttpGet("GetDefaultRules")]
+        public async Task<ActionResult> ListDefaultRules()
+        {
+            //Sacamos las que tengan Ismandatory como true 
+            var rules = await _Context.Rules
+                .Where(r => r.IsMandatory == true)
+                .Select(r => new
+                {
+                    r.Name
+                })
+                .ToListAsync();
+
+            return Ok(rules);
+        }
+
         //Para obtener el listado de las reglas de una habitacion
         [HttpGet("getrules/{roomId}")]
         public async Task<ActionResult> ListRules(int roomid) 
@@ -182,6 +201,41 @@ namespace Room.Me.Controllers
 
             return Ok(roomRules);
         }
+
+
+        //Borrar rule por id de rule (se borra en cascada de RoomRules)
+        [HttpPost("DeleteRule")]
+        public async Task<ActionResult> DeleteRule(DeleteRuleDto dto)
+        {
+            //Sacamos el user por JWT
+            var userid = GetUserId();
+
+            //Sacamos la rule 
+            var rule = await _Context.Rules
+            .Include(r => r.RoomRules)
+            .FirstOrDefaultAsync(r => r.Id == dto.ruleid && r.CreatedByUserId == userid);
+
+            //Si el user esta null
+            if (userid == null)
+                return Unauthorized();
+
+            if (rule == null)
+                return NotFound();
+
+            if (rule.IsMandatory)
+                return BadRequest("No se puede borrar una regla obligatoria");
+
+            //Quitamos esta regla
+            _Context.Rules.Remove(rule);
+            await _Context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Borrado con exito",
+                rule = rule.Name
+            });
+        }
+
 
         private int? GetUserId()
         {
