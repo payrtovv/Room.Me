@@ -209,17 +209,32 @@ namespace Room.Me.Controllers
                     Name = dto.Name,
                     Surname = dto.Surname,
                     Gender = dto.Gender,
-                    Age = dto.Age
+                    Age = dto.Age,
+                    IsVerified = false
                 };
 
                 //guardar usuario con contraseña hasheada
 
                 user.Password = hasher.HashPassword(user, dto.Password);
 
-                //Subir a la base de datos
+                // se guarda al usuario para obtener su id
                 _context.Users.Add(user);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
 
+                // crear las preferencias del usuario
+                if (dto.PreferenceIds != null && dto.PreferenceIds.Any())
+                {
+                    var userPreferences = dto.PreferenceIds.Select(prefId => new UserPreference
+                    {
+                        UserId = user.Id, 
+                        PreferenceId = prefId
+                    }).ToList();
+
+                    await _context.UserPreferences.AddRangeAsync(userPreferences);
+                    await _context.SaveChangesAsync();
+                }
+
+            
                 await SendCode(dto.Email);
 
                 //retornar mensaje 
@@ -233,18 +248,19 @@ namespace Room.Me.Controllers
                         user.Name,
                         user.Surname,
                         user.Gender,
-                        user.Age
+                        user.Age,
                     }
                 });
-
-            }catch(Exception Ex)
+                               
+            }
+            catch (Exception Ex)
             {
                 return StatusCode(500, new
                 {
                     message = "Ocurrió un error interno. Inténtalo más tarde."
                 });
 
-            }
+            }   
 
 
         }

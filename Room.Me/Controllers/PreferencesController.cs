@@ -37,9 +37,9 @@ namespace Room.Me.Controllers
             return Ok(groupedPreferences);
         }
 
-        // Endpoint -> Post: api/preferences/user
+        // Endpoint -> Put: api/preferences/user
 
-        [HttpPost("user")]
+        [HttpPut("user")]
         public async Task<IActionResult> SaveUserPreferences([FromBody] UserPreferencesUpdateDto dto)
         {
 
@@ -49,17 +49,10 @@ namespace Room.Me.Controllers
 
             if (user == null) return NotFound("Usuario no encontrado");
 
-            var existingPreferenceIds = await _context.Preferences
-                .Where(p => dto.PreferenceIds.Contains(p.Id))
-                .Select(p => p.Id)
-                .ToListAsync();
+            //borra las anteriores preferencias
+            _context.UserPreferences.RemoveRange(user.UserPreferences);
 
-            if (user.UserPreferences.Any())
-            {
-                _context.UserPreferences.RemoveRange(user.UserPreferences);
-            }
-
-            var newPreferences = existingPreferenceIds.Select(prefId => new UserPreference
+            var newPreferences = dto.PreferenceIds.Select(prefId => new UserPreference
             {
                 UserId = dto.UserId,
                 PreferenceId = prefId
