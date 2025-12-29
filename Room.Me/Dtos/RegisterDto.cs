@@ -9,5 +9,8 @@
 
         public String Gender { get; set; }
         public int Age { get; set; }
+
+        //para los ids de las preferencias
+        public List<int> PreferenceIds { get; set; }
     }
 }
