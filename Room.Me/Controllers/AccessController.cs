@@ -369,6 +369,14 @@ namespace Room.Me.Controllers
             }
            
         }
+        
+        [HttpGet("CheckEmail")]
+        public async Task<ActionResult<bool>> CheckEmail(string email)
+        {
+            var exists = await _context.Users.AnyAsync(u => u.Email == email);
+
+            return Ok(exists);
+        }
 
 
     }
