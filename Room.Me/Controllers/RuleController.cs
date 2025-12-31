@@ -204,24 +204,25 @@ namespace Room.Me.Controllers
 
 
         //Borrar rule por id de rule (se borra en cascada de RoomRules)
-        [HttpPost("DeleteRule")]
-        public async Task<ActionResult> DeleteRule(DeleteRuleDto dto)
+        [HttpDelete("DeteleRule/{ruleId}")]
+        public async Task<ActionResult> DeleteRule(int ruleId)
         {
             //Sacamos el user por JWT
             var userid = GetUserId();
 
-            //Sacamos la rule 
-            var rule = await _Context.Rules
-            .Include(r => r.RoomRules)
-            .FirstOrDefaultAsync(r => r.Id == dto.ruleid && r.CreatedByUserId == userid);
-
-            //Si el user esta null
             if (userid == null)
                 return Unauthorized();
 
+            //Sacamos la rule 
+            var rule = await _Context.Rules
+            .Include(r => r.RoomRules)
+            .FirstOrDefaultAsync(r => r.Id == ruleId && r.CreatedByUserId == userid);
+
+            //Si no hay conincidencia 
             if (rule == null)
                 return NotFound();
 
+            //Porsiacaso
             if (rule.IsMandatory)
                 return BadRequest("No se puede borrar una regla obligatoria");
 
