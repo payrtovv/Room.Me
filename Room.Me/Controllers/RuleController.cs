@@ -155,7 +155,7 @@ namespace Room.Me.Controllers
         {
             //Sacamos las que tengan Ismandatory como true 
             var rules = await _Context.Rules
-                .Where(r => r.IsMandatory == true)
+                .Where(r => r.IsMandatory)
                 .Select(r => new
                 {
                     r.Name

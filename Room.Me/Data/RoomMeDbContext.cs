@@ -18,6 +18,8 @@ namespace Room.Me.Data
 
         public DbSet<Rule> Rules { get; set; }
 
+        public DbSet<Feature> Feature { get; set; }
+
         public DbSet<Preference> Preferences { get; set; }
         public DbSet<UserPreference> UserPreferences { get; set; }
 
@@ -48,6 +50,22 @@ namespace Room.Me.Data
                 new Rule { Id = 4, Name = "Reuniones", IsMandatory = true },
                 new Rule { Id = 5, Name = "Alcohol", IsMandatory = true }
                );
+
+            modelBuilder.Entity<RoomFeature>()
+                .HasKey(rf => new { rf.RoomId, rf.FeatureId });
+
+            modelBuilder.Entity<RoomFeature>()
+                .HasOne(rf => rf.Room)
+                .WithMany(r => r.RoomFeatures)
+                .HasForeignKey(rf => rf.RoomId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RoomFeature>()
+                .HasOne(rf => rf.Feature)
+                .WithMany(f => f.RoomFeatures)
+                .HasForeignKey(rf => rf.FeatureId)
+                .OnDelete(DeleteBehavior.Cascade);
+
 
             modelBuilder.Entity<UserPreference>()
                 .HasKey(up => new { up.UserId, up.PreferenceId });
