@@ -21,11 +21,11 @@
         public bool NearCollege { get; set; }
 
         //Servicios
-
-        public bool IncludesElectricity { get; set; }
-        public bool IncludesWater { get; set; }
         public bool IncludesInternet { get; set; }
         public bool IncludesGas { get; set; }
         public bool IncludesCleaning { get; set; }
+
+        public List<int> FeatureIds { get; set; } = new();
+
     }
 }

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Room.Me.Models
 {
-    //Rooms y no rooms por que hay problemas por el nombre Room.Me
+    //Rooms y no room por que hay problemas por el nombre Room.Me
     public class Rooms
     {
         [Key]
@@ -29,11 +29,14 @@ namespace Room.Me.Models
 
         //Servicios
 
-        public bool IncludesElectricity { get; set; }
-        public bool IncludesWater { get; set; }
         public bool IncludesInternet { get; set; }
         public bool IncludesGas { get; set; }
         public bool IncludesCleaning { get; set; }
+
+        public int NumOfBathrooms { get; set; }
+
+
+
 
         //Si esta ocupada
         public bool State { get; set; }
@@ -45,6 +48,9 @@ namespace Room.Me.Models
         public User user { get; set; }
 
         public List<RoomRule> RoomRule { get; set; } = new();
+
+        public List<RoomFeature> RoomFeatures { get; set; } = new List<RoomFeature>();
+
 
     }
 }
