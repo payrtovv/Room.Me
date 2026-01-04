@@ -57,10 +57,7 @@ namespace Room.Me.Controllers
                     Direccion = dto.Direccion,
                     City = dto.City,
                     NearTransport = dto.NearTransport,
-                    NearCollege = dto.NearCollege,
-                    IncludesInternet = dto.IncludesInternet,
-                    IncludesGas = dto.IncludesGas,
-                    IncludesCleaning = dto.IncludesCleaning
+                    NearCollege = dto.NearCollege
                 };
 
                 foreach (var featureid in dto.FeatureIds)
@@ -88,9 +85,6 @@ namespace Room.Me.Controllers
                         room.City,
                         room.NearTransport,
                         room.NearCollege,
-                        room.IncludesInternet,
-                        room.IncludesGas,
-                        room.IncludesCleaning,
                         room.RoomFeatures
                     }
                 });
@@ -128,9 +122,6 @@ namespace Room.Me.Controllers
                     r.NearTransport,
                     r.NumOfBathrooms,
                     r.NearCollege,
-                    r.IncludesInternet,
-                    r.IncludesGas,
-                    r.IncludesCleaning,
                     r.RoomFeatures
                 })
                 .FirstOrDefaultAsync();

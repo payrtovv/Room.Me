@@ -20,6 +20,9 @@ namespace Room.Me.Data
 
         public DbSet<Feature> Feature { get; set; }
 
+        public DbSet<RoomFeature> RoomFeatures { get; set; }
+
+
         public DbSet<Preference> Preferences { get; set; }
         public DbSet<UserPreference> UserPreferences { get; set; }
 
@@ -28,6 +31,7 @@ namespace Room.Me.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            
             modelBuilder.Entity<Rooms>()
                 .HasMany(r => r.RoomRule)
                 .WithOne(rr => rr.Room)
@@ -66,7 +70,38 @@ namespace Room.Me.Data
                 .HasForeignKey(rf => rf.FeatureId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Feature>().HasData(
+                new Feature { Id = 1, Key = "wifi", Name = "Internet / Wifi", Category = "Servicios y Conectividad" },
+                new Feature { Id = 2, Key = "agua_caliente", Name = "Agua caliente", Category = "Servicios y Conectividad" },
+                new Feature { Id = 3, Key = "servicios_basicos", Name = "Servicios básicos incluidos (Luz/Agua/Gas)", Category = "Servicios y Conectividad" },
+                new Feature { Id = 4, Key = "limpieza_comun", Name = "Limpieza de áreas comunes", Category = "Servicios y Conectividad" },
+                new Feature { Id = 5, Key = "seguridad_24h", Name = "Portería / Seguridad 24h", Category = "Servicios y Conectividad" },
+                new Feature { Id = 6, Key = "ascensor", Name = "Ascensor", Category = "Servicios y Conectividad" },
+                new Feature { Id = 7, Key = "bodega", Name = "Bodega", Category = "Servicios y Conectividad" },
 
+                new Feature { Id = 8, Key = "terraza", Name = "Terraza / Rooftop", Category = "Áreas Sociales y Bienestar" },
+                new Feature { Id = 9, Key = "bbq", Name = "Zona BBQ / Parrilla", Category = "Áreas Sociales y Bienestar" },
+                new Feature { Id = 10, Key = "piscina", Name = "Piscina", Category = "Áreas Sociales y Bienestar" },
+                new Feature { Id = 11, Key = "sauna", Name = "Sauna / Turco", Category = "Áreas Sociales y Bienestar" },
+                new Feature { Id = 12, Key = "jacuzzi", Name = "Hidromasaje / Jacuzzi", Category = "Áreas Sociales y Bienestar" },
+                new Feature { Id = 13, Key = "canchas", Name = "Canchas deportivas", Category = "Áreas Sociales y Bienestar" },
+                new Feature { Id = 14, Key = "sala_eventos", Name = "Sala comunal / Eventos", Category = "Áreas Sociales y Bienestar" },
+                new Feature { Id = 15, Key = "gimnasio", Name = "Gimnasio", Category = "Áreas Sociales y Bienestar" },
+                new Feature { Id = 16, Key = "sala_tv", Name = "Sala de TV / Cine", Category = "Áreas Sociales y Bienestar" },
+                new Feature { Id = 17, Key = "jardin", Name = "Jardín interior", Category = "Áreas Sociales y Bienestar" },
+                new Feature { Id = 18, Key = "suite_huespedes", Name = "Suite de Huéspedes", Category = "Áreas Sociales y Bienestar" },
+
+                new Feature { Id = 19, Key = "linea_blanca", Name = "Línea Blanca Completa", Category = "Equipamiento del Hogar" },
+                new Feature { Id = 20, Key = "microondas", Name = "Microondas", Category = "Equipamiento del Hogar" },
+                new Feature { Id = 21, Key = "lavadora", Name = "Lavadora", Category = "Equipamiento del Hogar" },
+                new Feature { Id = 22, Key = "secadora", Name = "Secadora", Category = "Equipamiento del Hogar" },
+                new Feature { Id = 23, Key = "pequenos_electro", Name = "Pequeños Electrodomésticos", Category = "Equipamiento del Hogar" },
+                new Feature { Id = 24, Key = "menaje_cocina", Name = "Menaje de Cocina", Category = "Equipamiento del Hogar" },
+                new Feature { Id = 25, Key = "tv_sala", Name = "TV en sala (Smart TV)", Category = "Equipamiento del Hogar" },
+                new Feature { Id = 26, Key = "sala_comedor", Name = "Sala y Comedor amoblados", Category = "Equipamiento del Hogar" }
+            );
+
+               
             modelBuilder.Entity<UserPreference>()
                 .HasKey(up => new { up.UserId, up.PreferenceId });
 
