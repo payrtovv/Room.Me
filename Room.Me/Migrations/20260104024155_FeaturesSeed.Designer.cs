@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Room.Me.Data;
 
@@ -11,9 +12,11 @@ using Room.Me.Data;
 namespace Room.Me.Migrations
 {
     [DbContext(typeof(RoomMeDbContext))]
-    partial class RoomMeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260104024155_FeaturesSeed")]
+    partial class FeaturesSeed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -511,11 +514,14 @@ namespace Room.Me.Migrations
                     b.Property<int>("IdUserHost")
                         .HasColumnType("int");
 
-                    b.Property<float>("Latitud")
-                        .HasColumnType("real");
+                    b.Property<bool>("IncludesCleaning")
+                        .HasColumnType("bit");
 
-                    b.Property<float>("Longitud")
-                        .HasColumnType("real");
+                    b.Property<bool>("IncludesGas")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IncludesInternet")
+                        .HasColumnType("bit");
 
                     b.Property<float>("M2Space")
                         .HasColumnType("real");
@@ -529,25 +535,11 @@ namespace Room.Me.Migrations
                     b.Property<int>("NumOfBathrooms")
                         .HasColumnType("int");
 
-                    b.Property<int>("NumOfParkingSpaces")
-                        .HasColumnType("int");
-
-                    b.Property<int>("NumOfRooms")
-                        .HasColumnType("int");
-
                     b.Property<float>("Price")
                         .HasColumnType("real");
 
                     b.Property<bool>("State")
                         .HasColumnType("bit");
-
-                    b.Property<string>("Street")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdRoom");
 

@@ -52,15 +52,19 @@ namespace Room.Me.Controllers
                 {
                     IdUserHost = id,
                     Description = dto.Description,
-                    M2Space = dto.M2Space,
-                    Price = dto.Price,
+                    Type = dto.Type,
+                    Street = dto.Street,
                     Direccion = dto.Direccion,
                     City = dto.City,
+                    Latitud = dto.Latitud,
+                    Longitud =dto.Longitud,
+                    NumOfBathrooms = dto.NumOfBathrooms,
+                    NumOfRooms = dto.NumOfRooms,
+                    NumOfParkingSpaces = dto.NumOfParkingSlots,
+                    M2Space = dto.M2Space,
+                    Price = dto.Price,
                     NearTransport = dto.NearTransport,
-                    NearCollege = dto.NearCollege,
-                    IncludesInternet = dto.IncludesInternet,
-                    IncludesGas = dto.IncludesGas,
-                    IncludesCleaning = dto.IncludesCleaning
+                    NearCollege = dto.NearCollege
                 };
 
                 foreach (var featureid in dto.FeatureIds)
@@ -77,22 +81,7 @@ namespace Room.Me.Controllers
                 //Retornamos mensaje de exito
                 return Ok(new
                 {
-                    message = "Habitacion registrada exitosamente",
-                    room = new
-                    {
-                        IdUserHost = id,
-                        room.Description,
-                        room.M2Space,
-                        room.Price,
-                        room.Direccion,
-                        room.City,
-                        room.NearTransport,
-                        room.NearCollege,
-                        room.IncludesInternet,
-                        room.IncludesGas,
-                        room.IncludesCleaning,
-                        room.RoomFeatures
-                    }
+                    message = "Habitacion registrada exitosamente"
                 });
 
             }
@@ -121,17 +110,26 @@ namespace Room.Me.Controllers
                 .Select(r => new
                 {
                     r.Description,
-                    r.M2Space,
-                    r.Price,
+                    r.Type,
+                    r.Street,
                     r.Direccion,
                     r.City,
-                    r.NearTransport,
+                    r.Latitud,
+                    r.Longitud,
                     r.NumOfBathrooms,
+                    r.NumOfRooms,
+                    r.NumOfParkingSpaces,
+                    r.M2Space,
+                    r.Price,
+                    r.NearTransport,
                     r.NearCollege,
-                    r.IncludesInternet,
-                    r.IncludesGas,
-                    r.IncludesCleaning,
-                    r.RoomFeatures
+                    Feature = r.RoomFeatures.Select(rf => new
+                    {
+                        rf.Feature.Id,
+                        rf.Feature.Name,
+                        rf.Feature.Category,
+                        rf.Feature.Key
+                    }).ToList()
                 })
                 .FirstOrDefaultAsync();
 
