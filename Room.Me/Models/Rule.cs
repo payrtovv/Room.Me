@@ -10,10 +10,10 @@ public class Rule
     [MaxLength(200)]
     public string Name { get; set; }
 
-    //Pa las que son deley
-    public bool IsMandatory { get; set; }
-
     public int? CreatedByUserId { get; set; }
 
-    public List<RoomRule> RoomRules { get; set; } = new();
+    public int RoomId { get; set; }
+    public Rooms Room { get; set; } = null!;
+
+
 }

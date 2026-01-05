@@ -34,5 +34,7 @@
 
         public List<int> FeatureIds { get; set; } = new();
 
+        public List<CreateRuleDto> Rules { get; set; } = new();
+
     }
 }

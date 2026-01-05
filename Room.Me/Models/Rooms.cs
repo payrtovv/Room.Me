@@ -49,7 +49,7 @@ namespace Room.Me.Models
         [ForeignKey("IdUserHost")]
         public User user { get; set; }
 
-        public List<RoomRule> RoomRule { get; set; } = new();
+        public List<Rule> Rules{ get; set; } = new();
 
         public List<RoomFeature> RoomFeatures { get; set; } = new List<RoomFeature>();
 
