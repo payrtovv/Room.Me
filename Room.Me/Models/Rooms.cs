@@ -10,6 +10,8 @@ namespace Room.Me.Models
         [Key]
         public int IdRoom { get; set; }
 
+        public String Title { get; set; }
+
         public String Type { get; set;}
 
         public String Street { get; set; }

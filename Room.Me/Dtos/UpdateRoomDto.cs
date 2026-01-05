@@ -1,9 +1,10 @@
 ﻿namespace Room.Me.Dtos
 {
-    public class CreateRoomDto
+    public class UpdateRoomDto
     {
+        public int Id { get; set; }
+        
         public String Title { get; set; }
-
         public String Description { get; set; }
 
         public String Type { get; set; }
@@ -36,7 +37,6 @@
 
         public List<int> FeatureIds { get; set; } = new();
 
-        public List<CreateRuleDto> Rules { get; set; } = new();
-
+        public List<CreateRoomRuleDto> Rules { get; set; } = new();
     }
 }

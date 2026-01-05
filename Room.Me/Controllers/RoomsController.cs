@@ -47,6 +47,7 @@ namespace Room.Me.Controllers
                 var room = new Rooms
                 {
                     IdUserHost = id,
+                    Title = dto.Title,
                     Description = dto.Description,
                     Type = dto.Type,
                     Street = dto.Street,
@@ -119,6 +120,7 @@ namespace Room.Me.Controllers
                 .Where(r => r.IdRoom == idroom && r.IdUserHost == Userid)
                 .Select(r => new
                 {
+                    r.Title,
                     r.Description,
                     r.Type,
                     r.Street,
@@ -135,7 +137,8 @@ namespace Room.Me.Controllers
                     r.NearCollege,
                     Rules = r.Rules.Select(rr => new
                     {
-                        rr.Name
+                        rr.Name,
+                        rr.Id
                     }).ToList(),
 
                     Feature = r.RoomFeatures.Select(rf => new
@@ -154,6 +157,116 @@ namespace Room.Me.Controllers
 
 
             return Ok(room);
+        }
+
+        [HttpPost("updateRoom")]
+        public async Task<ActionResult> updateRoom(UpdateRoomDto dto)
+        {
+            var userid = GetUserId();
+
+            var room = await _Context.Rooms
+                .Include(r => r.RoomFeatures)
+                .Include(r => r.Rules)
+                .FirstOrDefaultAsync(r => r.IdRoom == dto.Id && r.IdUserHost == userid);
+
+
+            if (room == null)
+                return NotFound(new { message = "Habitación no encontrada o no autorizada." });
+
+            // Actualizar los campos de la habitación
+            room.Title = dto.Title;
+            room.Description = dto.Description;
+            room.Type = dto.Type;
+            room.Street = dto.Street;
+            room.Direccion = dto.Direccion;
+            room.City = dto.City;
+            room.Latitud = dto.Latitud;
+            room.Longitud = dto.Longitud;
+            room.NumOfBathrooms = dto.NumOfBathrooms;
+            room.NumOfRooms = dto.NumOfRooms;
+            room.NumOfParkingSpaces = dto.NumOfParkingSlots;
+            room.M2Space = dto.M2Space;
+            room.Price = dto.Price;
+            room.NearTransport = dto.NearTransport;
+            room.NearCollege = dto.NearCollege;
+
+            // Eliminamos características que ya no están en la lista
+            var featuresToRemove = room.RoomFeatures
+                .Where(rf => !dto.FeatureIds.Contains(rf.FeatureId))
+                .ToList();
+
+            _Context.RoomFeatures.RemoveRange(featuresToRemove);
+
+            // Agregar nuevas características
+            foreach (var featureid in dto.FeatureIds)
+            {
+                //si no existe la caracteristica, la agregamos
+                if (!room.RoomFeatures.Any(rf => rf.FeatureId == featureid))
+                {
+                    room.RoomFeatures.Add(new RoomFeature
+                    {
+                        FeatureId = featureid
+                    });
+                }
+            }
+
+            //For each para revisar las reglas que manda el fron
+            foreach (var Rule in dto.Rules)
+            {
+                //buscamos si la regla ya existe en la base de datos
+                var existingRule = room.Rules.FirstOrDefault(r => r.Id == Rule.RuleId);
+                //si existe, actualizamos el nombre
+                if (existingRule != null)
+                {
+                    existingRule.Name = Rule.RuleName;
+                }
+                else
+
+                //si no existe, la agregamios
+                room.Rules.Add(new Rule
+                {
+                    Name = Rule.RuleName,
+                    CreatedByUserId = userid,
+                });
+            }
+
+            //buscamos las reglas que ya no estan en el dto para eliminarlas
+            var ruleIdsFromDto = dto.Rules
+                //Como puede venir una regla nueva sin id, filtramos los nulos
+                .Where(r => r.RuleId != null)
+                .Select(r => r.RuleId)
+                .ToList();
+            //lista de reglas a eliminar
+            var rulesToDelete = room.Rules
+                //Si la regla en la base de datos no esta en la lista del dto, la eliminamos
+                .Where(r => !ruleIdsFromDto.Contains(r.Id))
+                .ToList();
+
+            _Context.Rules.RemoveRange(rulesToDelete);
+
+            await _Context.SaveChangesAsync();
+
+            return Ok(new { message = "Habitación actualizada exitosamente." });
+
+        }
+
+        [HttpDelete("deleteRoom/{RoomId}")]
+        public async Task<ActionResult> DeleteRoom(int RoomId)
+        {
+            //obtenemos el id del usuario
+            var userid = GetUserId();
+            
+            var room = await _Context.Rooms
+                .FirstOrDefaultAsync(r => r.IdRoom == RoomId && r.IdUserHost == userid);
+            
+            if (room == null)
+                return NotFound(new { message = "Habitación no encontrada o no autorizada." });
+            
+            _Context.Rooms.Remove(room);
+            
+            await _Context.SaveChangesAsync();
+            
+            return Ok(new { message = "Habitación eliminada exitosamente." });
         }
 
 
