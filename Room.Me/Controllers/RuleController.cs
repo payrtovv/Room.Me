@@ -25,6 +25,7 @@ namespace Room.Me.Controllers
         }
 
         //Metodo para el nombre y el value de una regla en especifico 
+        /*
         [HttpPost("UpdateValueRule")]
         public async Task<ActionResult> UpdateRule([FromBody] UpdateRuleDto dto)
         {
@@ -78,7 +79,7 @@ namespace Room.Me.Controllers
                 });
             }
         }
-
+        
         //Metodo para crear regla y asignarla a la habitacion
         [HttpPost("CreateRule")]
         public async Task<ActionResult> CreateRule([FromBody] CreateRuleDto RuleDto)
@@ -108,7 +109,6 @@ namespace Room.Me.Controllers
                 var rule = new Rule
                 {
                     Name = RuleDto.RuleName,
-                    IsMandatory = false,
                     CreatedByUserId = id
                 };
 
@@ -150,20 +150,7 @@ namespace Room.Me.Controllers
 
         //Para obtener las que todos tienen que responder para cada habitacion 
 
-        [HttpGet("GetDefaultRules")]
-        public async Task<ActionResult> ListDefaultRules()
-        {
-            //Sacamos las que tengan Ismandatory como true 
-            var rules = await _Context.Rules
-                .Where(r => r.IsMandatory)
-                .Select(r => new
-                {
-                    r.Name
-                })
-                .ToListAsync();
 
-            return Ok(rules);
-        }
 
         //Para obtener el listado de las reglas de una habitacion
         [HttpGet("getrules/{roomId}")]
@@ -250,5 +237,6 @@ namespace Room.Me.Controllers
                 return null;
             }
         }
+        */
     }
 }

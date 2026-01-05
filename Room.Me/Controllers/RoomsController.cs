@@ -33,19 +33,15 @@ namespace Room.Me.Controllers
                     return BadRequest(ModelState);
 
                 // Obtiene el ID del usuario autenticado desde el JWT (claim "id")
-                var userId = User.FindFirst("id")?.Value;
+                var userId = GetUserId();
 
                 //Mira si el user id es null
-                if (string.IsNullOrEmpty(userId))
+                if (userId == null)
                 {
                     return Unauthorized(new { message = "Token inválido" });
                 }
 
-                //Mira si puede cambiar a int y lo guarda en la variable id
-                if (!int.TryParse(userId, out int id))
-                {
-                    return Unauthorized(new { message = "ID de usuario inválido" });
-                }
+                int id = userId.Value;
 
                 //crea una variable room
                 var room = new Rooms
@@ -73,6 +69,20 @@ namespace Room.Me.Controllers
                         FeatureId = featureid
                     });
                 }
+
+
+                foreach (var ruleDto in dto.Rules)
+                {
+                    var rule = new Rule
+                    {
+                        Name = ruleDto.RuleName,
+                        CreatedByUserId = userId,
+                        Room = room
+                    };
+
+                    _Context.Rules.Add(rule);
+                }
+
 
                 //aniadimos la Room
                 _Context.Rooms.Add(room);
@@ -123,6 +133,11 @@ namespace Room.Me.Controllers
                     r.Price,
                     r.NearTransport,
                     r.NearCollege,
+                    Rules = r.Rules.Select(rr => new
+                    {
+                        rr.Name
+                    }).ToList(),
+
                     Feature = r.RoomFeatures.Select(rf => new
                     {
                         rf.Feature.Id,
@@ -130,6 +145,7 @@ namespace Room.Me.Controllers
                         rf.Feature.Category,
                         rf.Feature.Key
                     }).ToList()
+                    
                 })
                 .FirstOrDefaultAsync();
 

@@ -13,9 +13,6 @@ namespace Room.Me.Data
         public DbSet<User> Users { get; set; }
 
         public DbSet<Rooms> Rooms { get; set; }
-
-        public DbSet<RoomRule> RoomRules { get; set; }
-
         public DbSet<Rule> Rules { get; set; }
 
         public DbSet<Feature> Feature { get; set; }
@@ -33,27 +30,11 @@ namespace Room.Me.Data
 
             
             modelBuilder.Entity<Rooms>()
-                .HasMany(r => r.RoomRule)
+                .HasMany(r => r.Rules)
                 .WithOne(rr => rr.Room)
                 .HasForeignKey(rr => rr.RoomId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
-            modelBuilder.Entity<Rule>()
-                .HasMany(r => r.RoomRules)
-                .WithOne(rr => rr.Rule)
-                .HasForeignKey(rr => rr.RuleId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            //Semilla de Reglas definidas
-            modelBuilder.Entity<Rule>().HasData(
-
-                new Rule { Id = 1, Name = "Fumar", IsMandatory = true },
-                new Rule { Id = 2, Name = "Mascotas", IsMandatory = true },
-                new Rule { Id = 3, Name = "Visitas", IsMandatory = true },
-                new Rule { Id = 4, Name = "Reuniones", IsMandatory = true },
-                new Rule { Id = 5, Name = "Alcohol", IsMandatory = true }
-               );
 
             modelBuilder.Entity<RoomFeature>()
                 .HasKey(rf => new { rf.RoomId, rf.FeatureId });
