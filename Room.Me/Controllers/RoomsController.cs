@@ -239,7 +239,8 @@ namespace Room.Me.Controllers
             //lista de reglas a eliminar
             var rulesToDelete = room.Rules
                 //Si la regla en la base de datos no esta en la lista del dto, la eliminamos
-                .Where(r => !ruleIdsFromDto.Contains(r.Id))
+                //mayor a 0 por que las que se agregan apenas estan con id 0 temporalmente
+                .Where(r => r.Id > 0 && !ruleIdsFromDto.Contains(r.Id))
                 .ToList();
 
             _Context.Rules.RemoveRange(rulesToDelete);
