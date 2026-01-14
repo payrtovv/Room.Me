@@ -55,6 +55,8 @@ namespace Room.Me.Models
 
         public List<RoomFeature> RoomFeatures { get; set; } = new List<RoomFeature>();
 
+        public List<RoomMedia> Media { get; set; } = new();
+
 
     }
 }

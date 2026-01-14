@@ -23,6 +23,10 @@ namespace Room.Me.Data
         public DbSet<Preference> Preferences { get; set; }
         public DbSet<UserPreference> UserPreferences { get; set; }
 
+        public DbSet<Message> Messages { get; set; }
+
+        public DbSet<RoomMedia> RoomMedia { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -124,8 +128,21 @@ namespace Room.Me.Data
                 new Preference { Id = 18, Category = "habits", Label = "No fumador", Value = "non_smoker" }
             );
 
-            
+            modelBuilder.Entity<Message>()
+            .HasOne(m => m.Sender)
+            .WithMany() 
+            .HasForeignKey(m => m.SenderId)
+            .OnDelete(DeleteBehavior.Restrict); 
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Receiver)
+                .WithMany() 
+                .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
+
+
 
     }
 }

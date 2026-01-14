@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using Room.Me.Data;
 using Room.Me.Dtos;
 using Room.Me.Models;
+using Room.Me.Services;
+using SendGrid.Helpers.Mail;
 using System.Security.Claims;
 
 
@@ -16,11 +18,12 @@ namespace Room.Me.Controllers
     public class RoomsController : ControllerBase
     {
         private readonly RoomMeDbContext _Context;
+        private readonly ImageService _imageService;
 
-
-        public RoomsController(RoomMeDbContext context)
+        public RoomsController(RoomMeDbContext context, ImageService imageService)
         {
             _Context = context;
+            _imageService = imageService;
         }
 
         //Crear habitacion
@@ -283,6 +286,42 @@ namespace Room.Me.Controllers
                 return null;
             }
         }
+        // POST: api/rooms/IdUSuario/media
+        [HttpPost("{idRoom}/media")]
+        [Authorize] 
+        public async Task<IActionResult> UploadRoomMedia(int idRoom, List<IFormFile> files)
+        {
+            // validar
+            var room = await _Context.Rooms.FindAsync(idRoom);
+            if (room == null) return NotFound("La habitación no existe.");
+
+            if (files == null || files.Count == 0)
+                return BadRequest("No se enviaron archivos.");
+
+            var uploadedMedia = new List<RoomMedia>();
+
+            foreach (var file in files)
+            {
+                 var url = await _imageService.UploadImageAsync(file);
+
+                if (!string.IsNullOrEmpty(url))
+                {
+                    uploadedMedia.Add(new RoomMedia
+                    {
+                        RoomId = idRoom,
+                        Url = url,
+                        ContentType = file.ContentType 
+                    });
+                }
+            }
+
+            if (uploadedMedia.Count > 0)
+            {
+                await _Context.RoomMedia.AddRangeAsync(uploadedMedia);
+                await _Context.SaveChangesAsync();
+            }
+
+            return Ok(new { message = "Archivos subidos", data = uploadedMedia });
+        }
     }
 }
-         
