@@ -13,6 +13,8 @@ namespace Room.Me.Data
         public String Gender { get; set; }
         public int Age { get; set; }
 
+        public string? ProfilePictureUrl { get; set; }
+
         //Esto es para la verificación de email
         //nullable 
         public string? VerificationCode { get; set; }

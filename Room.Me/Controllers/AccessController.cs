@@ -20,14 +20,18 @@ namespace Room.Me.Controllers
         private readonly SendgidEmailServices _emailService;
         //Servucio de JWT
         private readonly JwtService _config;
+        //Servicio de imagnes
+        private readonly Room.Me.Services.ImageService _imageService;
+
 
 
         //accesos a la base de datos y al servicio de email
-        public AccessController(RoomMeDbContext context, SendgidEmailServices emailService, JwtService config)
+        public AccessController(RoomMeDbContext context, SendgidEmailServices emailService, JwtService config, Room.Me.Services.ImageService imageService)
         {
             _context = context;
             _emailService = emailService;
             _config = config;
+            _imageService = imageService;
         }
 
 
@@ -264,7 +268,27 @@ namespace Room.Me.Controllers
 
 
         }
-        
+
+        // metodo para agregar el icon
+
+        [HttpPost("upload-photo/{userId}")]
+        public async Task<IActionResult> UploadProfilePhoto(int userId, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No se ha enviado ninguna imagen.");
+
+            var imageUrl = await _imageService.UploadImageAsync(file);
+
+            // actualiza la base de datos 
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound("Usuario no encontrado.");
+
+            user.ProfilePictureUrl = imageUrl;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { url = imageUrl });
+        }
+
         [Authorize]
         [HttpPost("EditUser")]
         public async Task<ActionResult> EditUser([FromBody] EditUserDto Dto)
