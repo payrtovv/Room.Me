@@ -10,6 +10,8 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionStringStorage = builder.Configuration.GetConnectionString("AzureStorage");
+builder.Services.AddScoped<ImageService>();
+
 
 builder.Services.AddControllers();
 

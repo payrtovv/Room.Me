@@ -28,7 +28,7 @@ namespace Room.Me.Controllers
 
         //Crear habitacion
         [HttpPost("CreateRoom")]
-        public async Task<ActionResult> CreateRoom([FromBody] CreateRoomDto dto)
+        public async Task<ActionResult> CreateRoom([FromForm] CreateRoomDto dto)
         {
             try
             {
@@ -53,19 +53,16 @@ namespace Room.Me.Controllers
                     Title = dto.Title,
                     Description = dto.Description,
                     Type = dto.Type,
-                    Street = dto.Street,
-                    Direccion = dto.Direccion,
-                    City = dto.City,
-                    Latitud = dto.Latitud,
-                    Longitud =dto.Longitud,
-                    NumOfBathrooms = dto.NumOfBathrooms,
-                    NumOfRooms = dto.NumOfRooms,
-                    NumOfParkingSpaces = dto.NumOfParkingSlots,
-                    M2Space = dto.M2Space,
+                    address = dto.address,
+                    Lat = dto.Lat,
+                    Lng =dto.Lng,
+                    Bathrooms = dto.Bathrooms,
+                    Bedrooms = dto.Bedrooms,
+                    ParkingSpaces = dto.ParkingSpaces,
+                    Surface = dto.Surface,
                     Price = dto.Price,
-                    NearTransport = dto.NearTransport,
-                    NearCollege = dto.NearCollege
                 };
+
 
                 foreach (var featureid in dto.FeatureIds)
                 {
@@ -87,9 +84,30 @@ namespace Room.Me.Controllers
                     _Context.Rules.Add(rule);
                 }
 
-
-                //aniadimos la Room
                 _Context.Rooms.Add(room);
+                await _Context.SaveChangesAsync();
+
+
+                var uploadedMedia = new List<RoomMedia>();
+                if (dto.Files != null && dto.Files.Count > 0)
+                {
+                    foreach (var file in dto.Files)
+                    {
+                        var url = await _imageService.UploadImageAsync(file);
+
+                        if (!string.IsNullOrEmpty(url))
+                        {
+                            uploadedMedia.Add(new RoomMedia
+                            {
+                                RoomId = room.IdRoom,
+                                Url = url,
+                                ContentType = file.ContentType
+                            });
+                        }
+                    }
+                }                    
+
+                await _Context.RoomMedia.AddRangeAsync(uploadedMedia);
                 await _Context.SaveChangesAsync();
 
                 //Retornamos mensaje de exito
@@ -103,8 +121,9 @@ namespace Room.Me.Controllers
             {
                 return StatusCode(500, new
                 {
-                    message = "Ocurrió un error interno. Inténtalo más tarde.",
-                    error = "Error interno del servidor"
+                    message = Ex.Message,
+                    stack = Ex.InnerException?.Message
+
                 });
             }
         }
@@ -126,18 +145,15 @@ namespace Room.Me.Controllers
                     r.Title,
                     r.Description,
                     r.Type,
-                    r.Street,
-                    r.Direccion,
-                    r.City,
-                    r.Latitud,
-                    r.Longitud,
-                    r.NumOfBathrooms,
-                    r.NumOfRooms,
-                    r.NumOfParkingSpaces,
-                    r.M2Space,
+                    r.address,
+                    r.Lng,
+                    r.Lat,
+                    r.Bathrooms,
+                    r.Bedrooms,
+                    r.ParkingSpaces,
+                    r.Surface,
                     r.Price,
-                    r.NearTransport,
-                    r.NearCollege,
+
                     Rules = r.Rules.Select(rr => new
                     {
                         rr.Name,
@@ -150,8 +166,16 @@ namespace Room.Me.Controllers
                         rf.Feature.Name,
                         rf.Feature.Category,
                         rf.Feature.Key
+                    }).ToList(),
+
+                    Media = r.Media.Select(m => new
+                    {
+                        m.Id,
+                        m.Url,
+                        m.ContentType
                     }).ToList()
-                    
+
+
                 })
                 .FirstOrDefaultAsync();
 
@@ -180,18 +204,15 @@ namespace Room.Me.Controllers
             room.Title = dto.Title;
             room.Description = dto.Description;
             room.Type = dto.Type;
-            room.Street = dto.Street;
-            room.Direccion = dto.Direccion;
-            room.City = dto.City;
-            room.Latitud = dto.Latitud;
-            room.Longitud = dto.Longitud;
-            room.NumOfBathrooms = dto.NumOfBathrooms;
-            room.NumOfRooms = dto.NumOfRooms;
-            room.NumOfParkingSpaces = dto.NumOfParkingSlots;
-            room.M2Space = dto.M2Space;
+            room.address = dto.address;
+            room.Lng = dto.Lng;
+            room.Lat = dto.Lat;
+            room.Bathrooms = dto.Bathrooms;
+            room.Bedrooms = dto.Bedrooms;
+            room.ParkingSpaces = dto.ParkingSpaces;
+            room.Surface = dto.Surface;
             room.Price = dto.Price;
-            room.NearTransport = dto.NearTransport;
-            room.NearCollege = dto.NearCollege;
+
 
             // Eliminamos características que ya no están en la lista
             var featuresToRemove = room.RoomFeatures

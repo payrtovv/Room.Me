@@ -16,6 +16,9 @@ namespace Room.Me.Services
             var containerName = "fotos-roomme";
 
             _containerClient = new BlobContainerClient(connectionString, containerName);
+
+            _containerClient.CreateIfNotExists(PublicAccessType.Blob);
+
         }
 
         public async Task<string> UploadImageAsync(IFormFile file)
