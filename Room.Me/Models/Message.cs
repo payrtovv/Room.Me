@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Room.Me.Data;
+using System.ComponentModel.DataAnnotations;
 
-namespace Room.Me.Data
+namespace Room.Me.Models
 {
     public class Message
     {

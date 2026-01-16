@@ -9,6 +9,7 @@ using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionStringStorage = builder.Configuration.GetConnectionString("AzureStorage");
 
 builder.Services.AddControllers();
 
@@ -25,8 +26,7 @@ if (string.IsNullOrWhiteSpace(conn))
 }
 
 builder.Services.AddDbContext<RoomMeDbContext>(options =>
-    options.UseSqlServer(conn)
-);
+    options.UseSqlServer(conn));
 
 
 //configuración de CORS para coneccion con el front
