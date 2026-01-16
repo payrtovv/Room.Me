@@ -11,7 +11,7 @@ namespace Room.Me.Services
         public ImageService(IConfiguration configuration)
         {
             // lee el string de conexion 
-            var connectionString = configuration.GetConnectionString("AzureStorage");
+            string connectionString = configuration.GetConnectionString("AzureStorage");
 
             var containerName = "fotos-roomme";
 

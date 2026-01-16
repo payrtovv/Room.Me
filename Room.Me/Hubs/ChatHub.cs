@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Room.Me.Data;
+using Room.Me.Models;
 using System.Security.Claims;
 
 namespace Room.Me.Hubs
