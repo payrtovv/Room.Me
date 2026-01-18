@@ -30,5 +30,11 @@
         public List<int> FeatureIds { get; set; } = new();
 
         public List<CreateRoomRuleDto> Rules { get; set; } = new();
+
+        public List<int> Files { get; set; } = new();
+
+        public List<IFormFile> NewFiles { get; set; } = new();
+
+
     }
 }

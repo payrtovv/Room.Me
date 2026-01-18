@@ -63,7 +63,7 @@ namespace Room.Me.Controllers
                     Price = dto.Price,
                 };
 
-
+                //Hacemos un foreach para recorrer la lista de Ids para subirlas
                 foreach (var featureid in dto.FeatureIds)
                 {
                     room.RoomFeatures.Add(new RoomFeature{
@@ -71,7 +71,7 @@ namespace Room.Me.Controllers
                     });
                 }
 
-
+                //Hacemos un foreach para recorrer la lista de Rules para subirlas
                 foreach (var ruleDto in dto.Rules)
                 {
                     var rule = new Rule
@@ -83,18 +83,21 @@ namespace Room.Me.Controllers
 
                     _Context.Rules.Add(rule);
                 }
-
+                //Subimos a la base de datos
                 _Context.Rooms.Add(room);
                 await _Context.SaveChangesAsync();
 
-
+                //Creamos una lista para mandar las fotos 
                 var uploadedMedia = new List<RoomMedia>();
+
+                //Si existen
                 if (dto.Files != null && dto.Files.Count > 0)
                 {
+                    //Recorremos con for each
                     foreach (var file in dto.Files)
                     {
+                        //Usamos el servicio de image service para subir 
                         var url = await _imageService.UploadImageAsync(file);
-
                         if (!string.IsNullOrEmpty(url))
                         {
                             uploadedMedia.Add(new RoomMedia
@@ -105,7 +108,8 @@ namespace Room.Me.Controllers
                             });
                         }
                     }
-                }                    
+                }              
+                //Subimos las fotos
 
                 await _Context.RoomMedia.AddRangeAsync(uploadedMedia);
                 await _Context.SaveChangesAsync();
@@ -133,11 +137,12 @@ namespace Room.Me.Controllers
         [HttpGet("Getlocal/{idRoom}")]
         public async Task<ActionResult> GetLocalRoom(int idroom)
         {
+            //Validamos el user
             var Userid = GetUserId();
             if (Userid == null)
                 return Unauthorized();
 
-
+            //Bucacamos la habitacion y selecionamos lo que queremos debolver
             var room = await _Context.Rooms
                 .Where(r => r.IdRoom == idroom && r.IdUserHost == Userid)
                 .Select(r => new
@@ -185,7 +190,8 @@ namespace Room.Me.Controllers
 
             return Ok(room);
         }
-
+        
+        /*
         [HttpPost("updateRoom")]
         public async Task<ActionResult> updateRoom(UpdateRoomDto dto)
         {
@@ -234,6 +240,38 @@ namespace Room.Me.Controllers
                 }
             }
 
+
+
+            var MediaToremove = room.Media.Where(mr => !dto.Files.Contains(mr.Id)).ToList();
+
+            if (MediaToremove != null)
+            {
+                _Context.RoomMedia.RemoveRange(MediaToremove);
+
+            }
+
+
+
+            var uploadedMedia = new List<RoomMedia>();
+
+            foreach (var file in dto.NewFiles)
+            {
+                var url = await _imageService.UploadImageAsync(file);
+
+                if (!string.IsNullOrEmpty(url))
+                {
+                    uploadedMedia.Add(new RoomMedia
+                    {
+                        RoomId = dto.Id,
+                        Url = url,
+                        ContentType = file.ContentType
+                    });
+                }
+            }
+
+            await _Context.RoomMedia.AddRangeAsync(uploadedMedia);
+            await _Context.SaveChangesAsync();
+
             //For each para revisar las reglas que manda el fron
             foreach (var Rule in dto.Rules)
             {
@@ -274,25 +312,157 @@ namespace Room.Me.Controllers
             return Ok(new { message = "Habitación actualizada exitosamente." });
 
         }
+        */
 
         [HttpDelete("deleteRoom/{RoomId}")]
         public async Task<ActionResult> DeleteRoom(int RoomId)
         {
             //obtenemos el id del usuario
             var userid = GetUserId();
-            
+            //Bucamos la habitacion
             var room = await _Context.Rooms
                 .FirstOrDefaultAsync(r => r.IdRoom == RoomId && r.IdUserHost == userid);
             
             if (room == null)
                 return NotFound(new { message = "Habitación no encontrada o no autorizada." });
             
+            //Quitamos y como esta en cascade se borra lo relacionado a la room
+            //Osea las rules y las features
             _Context.Rooms.Remove(room);
             
             await _Context.SaveChangesAsync();
             
             return Ok(new { message = "Habitación eliminada exitosamente." });
         }
+
+
+        [HttpGet("GetRoom/{IdRoom}")]
+        public async Task<ActionResult> GetRoom(int IdRoom)
+        {
+            var room = await _Context.Rooms
+                .Where(r => r.IdRoom == IdRoom)
+                .Select(r => new
+                {
+                    r.Title,
+                    r.Description,
+                    r.Type,
+                    r.address,
+                    r.Lng,
+                    r.Lat,
+                    r.Bathrooms,
+                    r.Bedrooms,
+                    r.ParkingSpaces,
+                    r.Surface,
+                    r.Price,
+
+                    Rules = r.Rules.Select(rr => new
+                    {
+                        rr.Name,
+                        rr.Id
+                    }).ToList(),
+
+                    Feature = r.RoomFeatures.Select(rf => new
+                    {
+                        rf.Feature.Id,
+                        rf.Feature.Name,
+                        rf.Feature.Category,
+                        rf.Feature.Key
+                    }).ToList(),
+
+                    Media = r.Media.Select(m => new
+                    {
+                        m.Id,
+                        m.Url,
+                        m.ContentType
+                    }).ToList()
+
+
+                })
+                .FirstOrDefaultAsync();
+
+            if (room == null)
+                return NotFound();
+
+            return Ok(room);
+        }
+
+
+
+        [HttpGet("GetRooms")]
+        public async Task<ActionResult> GetRooms(
+            //Esto va a salir en el endpoint para pedir
+            string? category,
+            int? bedrooms,
+            int? priceRangelow,
+            int? priceRageHigh,
+            int? parkingSpaces,
+            int? bathrooms,
+            float? surface)
+        {
+            //El query para el filtro
+            var query = _Context.Rooms.AsQueryable();
+
+            //si esta null
+            if(category != null)
+            {
+                //que conincida
+                query = query.Where(r => r.Type == category);
+            }
+            //asi con todos los demas
+
+            if (bedrooms != null)
+            {
+                query = query.Where(r => r.Bedrooms == bedrooms);
+            }
+
+
+            if (priceRageHigh != null && priceRangelow != null)
+            {
+                query = query.Where(r => r.Price < priceRageHigh && r.Price > priceRangelow);
+            }
+
+
+            if (parkingSpaces != null)
+            {
+                query = query.Where(r => r.ParkingSpaces == parkingSpaces);
+            }
+
+
+            if (bathrooms != null)
+            {
+                query = query.Where(r => r.Bathrooms == bathrooms);
+            }
+
+            if (surface != null)
+            {
+                query = query.Where(r => r.Surface == surface);
+            }
+
+            //Con el query buscamos las habitaciones 
+            var result = await query.Select(r => new
+            {
+                //Lo que va a regresar
+                r.IdRoom,
+                r.Title,
+                r.Description,
+                r.Price,
+                Media = r.Media.Select(m => new
+                {
+                    m.Id,
+                    m.Url,
+                    m.ContentType
+                }).FirstOrDefault() //Para que solo nos de la primera
+            }
+            //Para que nos de una lista
+            ).ToListAsync();
+
+            //Si no se encontro
+            if (!result.Any())
+                return NoContent();
+            //Debolvemos la lista
+            return Ok(result);
+        }
+
 
 
         private int? GetUserId()

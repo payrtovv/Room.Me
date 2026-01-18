@@ -393,7 +393,7 @@ namespace Room.Me.Controllers
             }
            
         }
-        
+                
         [HttpGet("CheckEmail")]
         public async Task<ActionResult<bool>> CheckEmail(string email)
         {
