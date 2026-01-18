@@ -191,6 +191,85 @@ namespace Room.Me.Controllers
             return Ok(room);
         }
         
+        [HttpGet("GetAllRooms")]
+        public async Task<ActionResult> GetAllRooms()
+        {
+            //Obtenemos el id del user
+            var IdUser = GetUserId();
+
+            if (IdUser == null)
+                return Unauthorized();
+
+
+            //Buscamos las habitaciones que no tengan el id del user 
+            var rooms = await _Context.Rooms.
+            Where(r=> r.IdUserHost != IdUser).
+            Select(r => new
+            {
+                Host = new
+                {
+                    r.IdUserHost,
+                    r.user.Name,
+                    r.user.ProfilePictureUrl
+                },
+                 r.IdRoom,
+                 r.Title,
+                 r.Description,
+                 r.Price,
+                 r.Type,
+                 r.address,
+                 r.Bathrooms,
+                 r.Bedrooms,
+                 r.ParkingSpaces,
+                 r.Surface,
+                 Media = r.Media.Select(m => new
+                 {
+                     m.Id,
+                     m.Url,
+                     m.ContentType
+                 }).FirstOrDefault() //Para que solo nos de la primera
+             }).ToListAsync();
+
+            return Ok(rooms);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("GetAllRoomsAnonymous")]
+        public async Task<ActionResult> GetAllRoomsAnonymous()
+        {
+           
+
+            //Buscamos las habitaciones que no tengan el id del user 
+            var rooms = await _Context.Rooms.
+            Select(r => new
+            {
+                Host = new
+                {
+                    r.IdUserHost,
+                    r.user.Name,
+                    r.user.ProfilePictureUrl
+                },
+                r.IdRoom,
+                r.Title,
+                r.Description,
+                r.Price,
+                r.Type,
+                r.address,
+                r.Bathrooms,
+                r.Bedrooms,
+                r.ParkingSpaces,
+                r.Surface,
+                Media = r.Media.Select(m => new
+                {
+                    m.Id,
+                    m.Url,
+                    m.ContentType
+                }).FirstOrDefault() //Para que solo nos de la primera
+            }).ToListAsync();
+
+            return Ok(rooms);
+        }
+
         /*
         [HttpPost("updateRoom")]
         public async Task<ActionResult> updateRoom(UpdateRoomDto dto)
@@ -343,7 +422,7 @@ namespace Room.Me.Controllers
 
             if (userid == null)
             {
-                return Unauthorized(new 
+                return Unauthorized(new
                 { message = "Token inválido" });
             }
 
@@ -354,6 +433,12 @@ namespace Room.Me.Controllers
                     r.Title,
                     r.Description,
                     r.Price,
+                    r.Type,
+                    r.address,
+                    r.Bathrooms,
+                    r.Bedrooms,
+                    r.ParkingSpaces,
+                    r.Surface,
                     Media = r.Media.Select(m => new
                     {
                         m.Id,
@@ -367,7 +452,7 @@ namespace Room.Me.Controllers
 
             return Ok(rooms);
         }
-
+    
         [HttpGet("GetRoom/{IdRoom}")]
         public async Task<ActionResult> GetRoom(int IdRoom)
         {
