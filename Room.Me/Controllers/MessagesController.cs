@@ -51,9 +51,9 @@ namespace Room.Me.Controllers
                         m.Content,
                         m.SentAt,
                         m.SenderId,
-                        m.ReceiverId,
-                       // m.ImageUrl,
-                        IsMine = m.SenderId == myId
+                        m.ReceiverId,                        
+                        IsMine = m.SenderId == myId,
+                        m.ImageUrl
                     })
                     .ToListAsync();
 
@@ -74,13 +74,12 @@ namespace Room.Me.Controllers
                 var myIdClaim = User.FindFirst("id");
                 if (myIdClaim == null) return Unauthorized();
                 var senderId = int.Parse(myIdClaim.Value);
-
-                // Subir imagen si existe
-                //string imageUrl = null;
-                //if (file != null && file.Length > 0)
-                //{
-                //                    imageUrl = await _imageService.UploadImageAsync(file);
-                //              }
+                               
+                string imageUrl = null;
+                if (file != null && file.Length > 0)
+                {
+                    imageUrl = await _imageService.UploadImageAsync(file);
+                }
 
                 //buscar los mensajes entre los dos usuarios
                 var message = new Message
@@ -89,7 +88,7 @@ namespace Room.Me.Controllers
                     ReceiverId = dto.ReceiverId,
                     Content = dto.Content,
                     SentAt = DateTime.UtcNow,
-                    //ImageUrl = imageUrl 
+                    ImageUrl = imageUrl 
                 };
 
                 _context.Messages.Add(message);
@@ -97,7 +96,7 @@ namespace Room.Me.Controllers
 
                 // se notifica al receptor
                 await _hubContext.Clients.User(dto.ReceiverId.ToString())
-                    .SendAsync("ReceiveMessage", senderId, message.Content);
+                    .SendAsync("ReceiveMessage", senderId, message.Content, imageUrl);
 
                 return Ok(new { Message = "Enviado", Data = message });
             }
