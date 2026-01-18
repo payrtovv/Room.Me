@@ -379,7 +379,8 @@ namespace Room.Me.Controllers
                             user.Name,
                             user.Surname,
                             user.Age,
-                            user.Gender
+                            user.Gender,
+                            imageUrl = user.ProfilePictureUrl
                         }
                     });
                 }

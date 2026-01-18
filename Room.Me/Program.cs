@@ -6,103 +6,38 @@ using Room.Me.Hubs;
 using Room.Me.Services;
 using System.Text;
 
-
-
 var builder = WebApplication.CreateBuilder(args);
-var connectionStringStorage = builder.Configuration.GetConnectionString("AzureStorage");
-builder.Services.AddScoped<ImageService>();
-
 
 builder.Services.AddControllers();
+// Registro de SignalR
+builder.Services.AddSignalR();
+
+builder.Services.AddScoped<ImageService>();
+builder.Services.AddScoped<JwtService>();
 
 //Constructor para el servicio de envío de emails
 builder.Services.AddSingleton<SendgidEmailServices>();
-//Base de datos
 
+// Base de Datos
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
-
-
 if (string.IsNullOrWhiteSpace(conn))
 {
     throw new Exception("Connection string no configurada");
 }
-
 builder.Services.AddDbContext<RoomMeDbContext>(options =>
     options.UseSqlServer(conn));
-
 
 //configuración de CORS para coneccion con el front
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowVue",
-        policy => policy
-            .WithOrigins("http://localhost:3000")
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials());
-});
-
-
-//Configuración de JWT
-
-builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer("Bearer", options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-
-            ValidIssuer = "RoomMeAPI",
-            ValidAudience = "RoomMeAPIUsers",
-
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(
-                    builder.Configuration["Jwt:Key"]
-                )
-            )
-        };
-    });
-
-builder.Services.AddScoped<JwtService>();
-
-
-
-var app = builder.Build();
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
-
-app.UseCors("AllowVue");
-
-app.UseAuthentication();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
-
-// registro del service de las imagenes
-
-builder.Services.AddScoped<ImageService>();
-
-// servicio de SignalR
-
-builder.Services.AddSignalR();
-builder.Services.AddCors(options =>
-{
     options.AddPolicy("AllowVue", policy =>
-        policy.WithOrigins("http://localhost:3000") // Asegúrate que este sea el puerto de tu Vue
+        policy.WithOrigins("http://localhost:3000") 
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials());
+              .AllowCredentials()); 
 });
+
+//Configuración de JWT
 
 builder.Services.AddAuthentication(options => {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -110,23 +45,25 @@ builder.Services.AddAuthentication(options => {
 })
 .AddJwtBearer(options =>
 {
-options.TokenValidationParameters = new TokenValidationParameters
-{
-    ValidateIssuer = true,
-    ValidateAudience = true,
-    ValidateLifetime = true,
-    ValidateIssuerSigningKey = true,
-    ValidIssuer = "RoomMeAPI",
-    ValidAudience = "RoomMeAPIUsers",
-    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-};
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = "RoomMeAPI",
+        ValidAudience = "RoomMeAPIUsers",
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
 
+    // soporte para SignalR
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
+
             if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chatHub"))
             {
                 context.Token = accessToken;
@@ -136,6 +73,8 @@ options.TokenValidationParameters = new TokenValidationParameters
     };
 });
 
+
+var app = builder.Build();
 
 
 if (app.Environment.IsDevelopment())
@@ -148,13 +87,15 @@ else
     app.UseHsts();
 }
 
+app.UseHttpsRedirection(); 
+
 app.UseCors("AllowVue");
+
+// autenticación y autorización
 app.UseAuthentication();
 app.UseAuthorization();
 
-
+// mapeo de controladores y hubs
 app.MapControllers();
 app.MapHub<ChatHub>("/chatHub"); 
-
-
 app.Run();
