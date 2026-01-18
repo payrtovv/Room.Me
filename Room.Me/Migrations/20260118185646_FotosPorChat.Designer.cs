@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Room.Me.Data;
 
@@ -11,9 +12,11 @@ using Room.Me.Data;
 namespace Room.Me.Migrations
 {
     [DbContext(typeof(RoomMeDbContext))]
-    partial class RoomMeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260118185646_FotosPorChat")]
+    partial class FotosPorChat
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -457,9 +460,6 @@ namespace Room.Me.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsRead")
