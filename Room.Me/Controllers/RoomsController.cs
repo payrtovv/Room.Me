@@ -336,6 +336,38 @@ namespace Room.Me.Controllers
         }
 
 
+        [HttpGet("GetMyRooms")]
+        public async Task<ActionResult> GetMyRooms()
+        {
+            var userid = GetUserId();
+
+            if (userid == null)
+            {
+                return Unauthorized(new 
+                { message = "Token inválido" });
+            }
+
+            var rooms = await _Context.Rooms.Where(r => r.IdUserHost == userid).
+                Select(r => new
+                {
+                    r.IdRoom,
+                    r.Title,
+                    r.Description,
+                    r.Price,
+                    Media = r.Media.Select(m => new
+                    {
+                        m.Id,
+                        m.Url,
+                        m.ContentType
+                    }).FirstOrDefault() //Para que solo nos de la primera
+                }).ToListAsync();
+
+            if (!rooms.Any())
+                return (NoContent());
+
+            return Ok(rooms);
+        }
+
         [HttpGet("GetRoom/{IdRoom}")]
         public async Task<ActionResult> GetRoom(int IdRoom)
         {
@@ -343,6 +375,7 @@ namespace Room.Me.Controllers
                 .Where(r => r.IdRoom == IdRoom)
                 .Select(r => new
                 {
+                    r.IdUserHost,
                     r.Title,
                     r.Description,
                     r.Type,
