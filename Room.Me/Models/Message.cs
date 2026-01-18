@@ -17,8 +17,12 @@ namespace Room.Me.Models
         [Required]
         public string Content { get; set; }
 
+        //public string ImageUrl { get; set; }
+
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
 
         public bool IsRead { get; set; } = false;
+
+
     }
 }
