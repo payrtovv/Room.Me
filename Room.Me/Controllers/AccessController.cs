@@ -330,6 +330,11 @@ namespace Room.Me.Controllers
                     user.Surname = Dto.Surname;
                     user.Gender = Dto.Gender;
                     user.Age = Dto.Age;
+                    if (Dto.Photo != null && Dto.Photo.Length > 0)
+                    {
+                        string newPhotoUrl = await _imageService.UploadImageAsync(Dto.Photo);
+                        user.ProfilePictureUrl = newPhotoUrl;
+                    }
 
                     //Subir cambios a la base de datos
                     await _context.SaveChangesAsync();  
@@ -342,7 +347,8 @@ namespace Room.Me.Controllers
                             user.Name,
                             user.Surname,
                             user.Gender,
-                            user.Age
+                            user.Age,
+                            imageUrl = user.ProfilePictureUrl
                         }
                     });
                 }
