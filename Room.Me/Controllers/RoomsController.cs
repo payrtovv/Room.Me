@@ -460,6 +460,12 @@ namespace Room.Me.Controllers
                 .Where(r => r.IdRoom == IdRoom)
                 .Select(r => new
                 {
+                    Host = new
+                    {
+                        r.IdUserHost,
+                        r.user.Name,
+                        r.user.ProfilePictureUrl
+                    },
                     r.IdUserHost,
                     r.Title,
                     r.Description,
@@ -560,6 +566,12 @@ namespace Room.Me.Controllers
             var result = await query.Select(r => new
             {
                 //Lo que va a regresar
+                Host = new
+                {
+                    r.IdUserHost,
+                    r.user.Name,
+                    r.user.ProfilePictureUrl
+                },
                 r.IdRoom,
                 r.Title,
                 r.Description,

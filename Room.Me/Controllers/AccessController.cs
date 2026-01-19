@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Room.Me.Data;
 using Room.Me.Dtos;
 using Room.Me.Services;
+using System.Security.Claims;
 
 
 
@@ -52,6 +53,15 @@ namespace Room.Me.Controllers
                     message = "Usuario no encontrado"
                 });
             }
+
+            if (User.IsVerified == false)
+            {
+                return Unauthorized(new
+                {
+                    message = "Usuario no verificado. Por favor, verifica tu correo electrónico."
+                });
+            }
+
             //hash de la contraseña
             var hasher = new PasswordHasher<User>();
 
@@ -380,7 +390,16 @@ namespace Room.Me.Controllers
                             user.Surname,
                             user.Age,
                             user.Gender,
-                            imageUrl = user.ProfilePictureUrl
+                            imageUrl = user.ProfilePictureUrl,
+                            Preferences = _context.UserPreferences
+                                .Where(up => up.UserId == user.Id)
+                                .Select(up => new
+                                {
+                                    up.Preference.Id,
+                                    up.Preference.Category,
+                                    up.Preference.Value,
+                                    up.Preference.Label
+                                }).ToList()
                         }
                     });
                 }
@@ -394,7 +413,65 @@ namespace Room.Me.Controllers
             }
            
         }
-                
+
+        [Authorize]
+        [HttpGet("GetLocalUser")]
+        public async Task<IActionResult> GetLocalUser()
+        {
+            try
+            {
+                var userid = GetUserId();
+
+                //Buscamos usuario por Id
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userid);
+
+                //Si no se encuentra
+                if (user == null)
+                {
+                    return NotFound(new
+                    {
+                        message = "Usuario no encontrado"
+                    });
+                }
+                else
+                {
+                    //Si se encuentra 
+                    return Ok(new
+                    {
+                        user = new
+                        {
+                            user.Id,
+                            user.Email,
+                            user.Name,
+                            user.Surname,
+                            user.Age,
+                            user.Gender,
+                            imageUrl = user.ProfilePictureUrl,
+                            Preferences = _context.UserPreferences
+                                .Where(up => up.UserId == user.Id)
+                                .Select(up => new
+                                {
+                                    up.Preference.Id,
+                                    up.Preference.Category,
+                                    up.Preference.Value,
+                                    up.Preference.Label
+                                }).ToList()
+                        }
+                    });
+                }
+
+            }
+            catch (Exception Ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Ocurrió un error interno. Inténtalo más tarde."
+                });
+            }
+
+        }
+
+
         [HttpGet("CheckEmail")]
         public async Task<ActionResult<bool>> CheckEmail(string email)
         {
@@ -402,7 +479,48 @@ namespace Room.Me.Controllers
 
             return Ok(exists);
         }
+        [Authorize]
+        [HttpDelete("DeleteAccount")]
+        public async Task<ActionResult> DeleteAccount()
+        {
+            var userId = GetUserId();
+
+            if (userId == null)
+                return Unauthorized();
+
+            //Borrar rooms del usuario
+            var rooms = await _context.Rooms
+                .Where(r => r.IdUserHost == userId)
+                .ToListAsync();
+
+            _context.Rooms.RemoveRange(rooms);
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return NotFound();
+
+            
+            _context.Users.Remove(user);
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Cuenta eliminada correctamente");
+        }
 
 
+        private int? GetUserId()
+        {
+            var userId = User.FindFirstValue("id");
+            if (int.TryParse(userId, out int id))
+            {
+                return id;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

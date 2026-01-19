@@ -53,7 +53,7 @@ namespace Room.Me.Data
                 .HasOne(rf => rf.Feature)
                 .WithMany(f => f.RoomFeatures)
                 .HasForeignKey(rf => rf.FeatureId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict); 
 
             modelBuilder.Entity<Feature>().HasData(
                 new Feature { Id = 1, Key = "wifi", Name = "Internet / Wifi", Category = "Servicios y Conectividad" },
@@ -93,12 +93,14 @@ namespace Room.Me.Data
             modelBuilder.Entity<UserPreference>()
                 .HasOne(up => up.User)
                 .WithMany(u => u.UserPreferences)
-                .HasForeignKey(up => up.UserId);
+                .HasForeignKey(up => up.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<UserPreference>()
                 .HasOne(up => up.Preference)
                 .WithMany(p => p.UserPreferences)
-                .HasForeignKey(up => up.PreferenceId);
+                .HasForeignKey(up => up.PreferenceId).
+                OnDelete(DeleteBehavior.Restrict); 
 
             // seed data for Preferences
             modelBuilder.Entity<Preference>().HasData(

@@ -16,19 +16,26 @@ namespace Room.Me.Controllers
         {
             _Context = context;
         }
-
         [HttpGet("GetAllFeatures")]
         public async Task<ActionResult> GetDefaultFeatures()
         {
-            var features = await _Context.Feature.Select(r => new
-            {
-                r.Name,
-                r.Id
-            }).ToListAsync();
+            var features = await _Context.Feature.ToListAsync();
+
+            var groupedFeatures = features
+                .GroupBy(f => f.Category)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(f => new
+                    {
+                        f.Id,
+                        f.Name,
+                        f.Key,
+                    }).ToList()
+                );
 
             return Ok(new
             {
-                Features = features
+                Features = groupedFeatures
             });
         }
 
