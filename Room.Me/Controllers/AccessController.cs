@@ -56,10 +56,7 @@ namespace Room.Me.Controllers
 
             if (User.IsVerified == false)
             {
-                return Unauthorized(new
-                {
-                    message = "Usuario no verificado. Por favor, verifica tu correo electrónico."
-                });
+                return Forbid();
             }
 
             //hash de la contraseña
@@ -74,7 +71,7 @@ namespace Room.Me.Controllers
             //si la contraseña es incorrecta
             if (result == PasswordVerificationResult.Failed)
             {
-                return Unauthorized(new { message = "Contraseña incorrecta" });
+                return Forbid();
             }
 
             return Ok(new
