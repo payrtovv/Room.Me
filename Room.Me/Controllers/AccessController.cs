@@ -54,11 +54,6 @@ namespace Room.Me.Controllers
                 });
             }
 
-            if (User.IsVerified == false)
-            {
-                return Forbid();
-            }
-
             //hash de la contraseña
             var hasher = new PasswordHasher<User>();
 
@@ -70,6 +65,11 @@ namespace Room.Me.Controllers
 
             //si la contraseña es incorrecta
             if (result == PasswordVerificationResult.Failed)
+            {
+                    return Unauthorized();
+            }
+
+            if (User.IsVerified == false)
             {
                 return Forbid();
             }
