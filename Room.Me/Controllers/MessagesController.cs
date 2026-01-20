@@ -106,5 +106,86 @@ namespace Room.Me.Controllers
             }
         }
 
+        // GET: api/messages/conversation/Id del usuario
+        [HttpGet("conversation/{otherUserId:int}")]
+        public async Task<IActionResult> GetConversationHistory(int otherUserId)
+        {
+            try
+            {
+                var myIdClaim = User.FindFirst("id") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+                if (myIdClaim == null) return Unauthorized("Token inválido.");
+                var myId = int.Parse(myIdClaim.Value);
+
+                var messages = await _context.Messages
+                    .Where(m => (m.SenderId == myId && m.ReceiverId == otherUserId) ||
+                                (m.SenderId == otherUserId && m.ReceiverId == myId))
+                    .OrderBy(m => m.SentAt) 
+                    .Select(m => new
+                    {
+                        m.Id,
+                        m.Content,
+                        m.SentAt,
+                        m.SenderId,
+                        m.ReceiverId,
+                        IsMine = m.SenderId == myId,
+                        m.ImageUrl 
+                    })
+                    .ToListAsync();
+
+                return Ok(messages);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error al cargar historial: " + ex.Message);
+            }
+        }
+
+        // GET: api/messages/inbox
+
+        [HttpGet("inbox")]
+        public async Task<IActionResult> GetInbox()
+        {
+            try
+            {
+                var myIdClaim = User.FindFirst("id") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+                if (myIdClaim == null) return Unauthorized("Token inválido.");
+                var myId = int.Parse(myIdClaim.Value);
+
+                // se mete a  sender y receiver para sacar los nombres 
+                var allMyMessages = await _context.Messages
+                    .Include(m => m.Sender)
+                    .Include(m => m.Receiver)
+                    .Where(m => m.SenderId == myId || m.ReceiverId == myId)
+                    .OrderByDescending(m => m.SentAt) 
+                    .ToListAsync();
+
+                var inboxList = allMyMessages
+                    .GroupBy(m => m.SenderId == myId ? m.ReceiverId : m.SenderId)
+                    .Select(g =>
+                    {
+                        var lastMsg = g.First();
+
+                        var otherUser = (lastMsg.SenderId == myId) ? lastMsg.Receiver : lastMsg.Sender;
+
+                        return new
+                        {
+                            otherUserId = otherUser.Id,
+                            otherUserName = otherUser.Name, 
+                            otherUserProfilePic = otherUser.ProfilePictureUrl,
+                            lastMessage = (lastMsg.SenderId == myId ? "Tú: " : "") + lastMsg.Content, 
+                            lastMessageTime = lastMsg.SentAt,
+                            isMine = lastMsg.SenderId == myId
+                        };
+                    })
+                    .ToList();
+
+                return Ok(inboxList);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error al cargar bandeja de entrada: " + ex.Message);
+            }
+        }
+
     } 
 }
