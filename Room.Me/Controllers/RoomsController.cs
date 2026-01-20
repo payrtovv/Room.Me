@@ -64,6 +64,7 @@ namespace Room.Me.Controllers
                 };
 
                 //Hacemos un foreach para recorrer la lista de Ids para subirlas
+                //Nunca va a ser null por que en el dto esta inicializada
                 foreach (var featureid in dto.FeatureIds)
                 {
                     room.RoomFeatures.Add(new RoomFeature{
@@ -72,6 +73,7 @@ namespace Room.Me.Controllers
                 }
 
                 //Hacemos un foreach para recorrer la lista de Rules para subirlas
+                //Nunca va a ser null por que en el dto esta inicializada
                 foreach (var ruleDto in dto.Rules)
                 {
                     var rule = new Rule
@@ -130,6 +132,126 @@ namespace Room.Me.Controllers
 
                 });
             }
+        }
+
+        [HttpPost("updateRoom")]
+        public async Task<ActionResult> updateRoom(UpdateRoomDto dto)
+        {
+            //Sacamos el id del user
+            var userid = GetUserId();
+
+            //buscamos la habitacion del dto y vemos si le pertenece
+            var room = await _Context.Rooms
+                .Include(r => r.RoomFeatures)
+                .Include(r => r.Rules)
+                .FirstOrDefaultAsync(r => r.IdRoom == dto.Id && r.IdUserHost == userid);
+
+            //No se encontro 
+            if (room == null)
+                return NotFound(new { message = "Habitación no encontrada o no autorizada." });
+
+            // Actualizar los campos de la habitación
+            room.Title = dto.Title;
+            room.Description = dto.Description;
+            room.Type = dto.Type;
+            room.address = dto.address;
+            room.Lng = dto.Lng;
+            room.Lat = dto.Lat;
+            room.Bathrooms = dto.Bathrooms;
+            room.Bedrooms = dto.Bedrooms;
+            room.ParkingSpaces = dto.ParkingSpaces;
+            room.Surface = dto.Surface;
+            room.Price = dto.Price;
+
+
+            // Eliminamos características que ya no están en la lista
+            var featuresToRemove = room.RoomFeatures
+                .Where(rf => !dto.FeatureIds.Contains(rf.FeatureId)) //Las que no tengan el id del dto
+                .ToList();
+
+            _Context.RoomFeatures.RemoveRange(featuresToRemove); //las quitamos de la base de datos
+
+            // Agregar nuevas características
+            foreach (var featureid in dto.FeatureIds)
+            {
+                //si no existe la caracteristica, la agregamos
+                if (!room.RoomFeatures.Any(rf => rf.FeatureId == featureid))
+                {
+                    room.RoomFeatures.Add(new RoomFeature
+                    {
+                        FeatureId = featureid
+                    });
+                }
+            }
+
+            //Hacemos una lista que tenga la media que se va a eliminar
+            var MediaToremove = room.Media.Where(mr => !dto.Files.Contains(mr.Id)).ToList(); //devolvemos las que no estan en el dto
+
+            //Las eliminamos
+            _Context.RoomMedia.RemoveRange(MediaToremove);
+
+            //Creamos una lista para las nuevas imagenes
+            var uploadedMedia = new List<RoomMedia>();
+
+            //recorremos las nuevas imagenes
+            foreach (var file in dto.NewFiles)
+            {
+                //Las subimos con el servicio 
+                var url = await _imageService.UploadImageAsync(file);
+
+                if (!string.IsNullOrEmpty(url))
+                {
+                    uploadedMedia.Add(new RoomMedia
+                    {
+                        RoomId = dto.Id,
+                        Url = url,
+                        ContentType = file.ContentType
+                    });
+                }
+            }
+            //Subimos las nuevas imagenes
+            await _Context.RoomMedia.AddRangeAsync(uploadedMedia);
+            await _Context.SaveChangesAsync();
+
+            //For each para revisar las reglas que manda el fron
+            foreach (var Rule in dto.Rules)
+            {
+                //buscamos si la regla ya existe en la base de datos
+                var existingRule = room.Rules.FirstOrDefault(r => r.Id == Rule.RuleId);
+                //si existe, actualizamos el nombre
+                if (existingRule != null)
+                {
+                    existingRule.Name = Rule.RuleName;
+                }
+                else
+
+                    //si no existe, la agregamios
+                    room.Rules.Add(new Rule
+                    {
+                        Name = Rule.RuleName,
+                        CreatedByUserId = userid,
+                    });
+            }
+
+            //buscamos las reglas que ya no estan en el dto para eliminarlas
+            var ruleIdsFromDto = dto.Rules
+                //Como puede venir una regla nueva sin id, filtramos los nulos
+                .Where(r => r.RuleId != null)
+                .Select(r => r.RuleId)
+                .ToList();
+            //lista de reglas a eliminar
+            var rulesToDelete = room.Rules
+                //Si la regla en la base de datos no esta en la lista del dto, la eliminamos
+                //mayor a 0 por que las que se agregan apenas estan con id 0 temporalmente
+                .Where(r => r.Id > 0 && !ruleIdsFromDto.Contains(r.Id))
+                .ToList();
+
+            _Context.Rules.RemoveRange(rulesToDelete);
+
+            await _Context.SaveChangesAsync();
+
+            return Ok(new { message = "Habitación actualizada exitosamente." });
+
         }
 
         //Para habitaciones propias
@@ -237,9 +359,6 @@ namespace Room.Me.Controllers
         [HttpGet("GetAllRoomsAnonymous")]
         public async Task<ActionResult> GetAllRoomsAnonymous()
         {
-           
-
-            //Buscamos las habitaciones que no tengan el id del user 
             var rooms = await _Context.Rooms.
             Select(r => new
             {
@@ -270,128 +389,8 @@ namespace Room.Me.Controllers
             return Ok(rooms);
         }
 
-        /*
-        [HttpPost("updateRoom")]
-        public async Task<ActionResult> updateRoom(UpdateRoomDto dto)
-        {
-            var userid = GetUserId();
 
-            var room = await _Context.Rooms
-                .Include(r => r.RoomFeatures)
-                .Include(r => r.Rules)
-                .FirstOrDefaultAsync(r => r.IdRoom == dto.Id && r.IdUserHost == userid);
-
-
-            if (room == null)
-                return NotFound(new { message = "Habitación no encontrada o no autorizada." });
-
-            // Actualizar los campos de la habitación
-            room.Title = dto.Title;
-            room.Description = dto.Description;
-            room.Type = dto.Type;
-            room.address = dto.address;
-            room.Lng = dto.Lng;
-            room.Lat = dto.Lat;
-            room.Bathrooms = dto.Bathrooms;
-            room.Bedrooms = dto.Bedrooms;
-            room.ParkingSpaces = dto.ParkingSpaces;
-            room.Surface = dto.Surface;
-            room.Price = dto.Price;
-
-
-            // Eliminamos características que ya no están en la lista
-            var featuresToRemove = room.RoomFeatures
-                .Where(rf => !dto.FeatureIds.Contains(rf.FeatureId))
-                .ToList();
-
-            _Context.RoomFeatures.RemoveRange(featuresToRemove);
-
-            // Agregar nuevas características
-            foreach (var featureid in dto.FeatureIds)
-            {
-                //si no existe la caracteristica, la agregamos
-                if (!room.RoomFeatures.Any(rf => rf.FeatureId == featureid))
-                {
-                    room.RoomFeatures.Add(new RoomFeature
-                    {
-                        FeatureId = featureid
-                    });
-                }
-            }
-
-
-
-            var MediaToremove = room.Media.Where(mr => !dto.Files.Contains(mr.Id)).ToList();
-
-            if (MediaToremove != null)
-            {
-                _Context.RoomMedia.RemoveRange(MediaToremove);
-
-            }
-
-
-
-            var uploadedMedia = new List<RoomMedia>();
-
-            foreach (var file in dto.NewFiles)
-            {
-                var url = await _imageService.UploadImageAsync(file);
-
-                if (!string.IsNullOrEmpty(url))
-                {
-                    uploadedMedia.Add(new RoomMedia
-                    {
-                        RoomId = dto.Id,
-                        Url = url,
-                        ContentType = file.ContentType
-                    });
-                }
-            }
-
-            await _Context.RoomMedia.AddRangeAsync(uploadedMedia);
-            await _Context.SaveChangesAsync();
-
-            //For each para revisar las reglas que manda el fron
-            foreach (var Rule in dto.Rules)
-            {
-                //buscamos si la regla ya existe en la base de datos
-                var existingRule = room.Rules.FirstOrDefault(r => r.Id == Rule.RuleId);
-                //si existe, actualizamos el nombre
-                if (existingRule != null)
-                {
-                    existingRule.Name = Rule.RuleName;
-                }
-                else
-
-                //si no existe, la agregamios
-                room.Rules.Add(new Rule
-                {
-                    Name = Rule.RuleName,
-                    CreatedByUserId = userid,
-                });
-            }
-
-            //buscamos las reglas que ya no estan en el dto para eliminarlas
-            var ruleIdsFromDto = dto.Rules
-                //Como puede venir una regla nueva sin id, filtramos los nulos
-                .Where(r => r.RuleId != null)
-                .Select(r => r.RuleId)
-                .ToList();
-            //lista de reglas a eliminar
-            var rulesToDelete = room.Rules
-                //Si la regla en la base de datos no esta en la lista del dto, la eliminamos
-                //mayor a 0 por que las que se agregan apenas estan con id 0 temporalmente
-                .Where(r => r.Id > 0 && !ruleIdsFromDto.Contains(r.Id))
-                .ToList();
-
-            _Context.Rules.RemoveRange(rulesToDelete);
-
-            await _Context.SaveChangesAsync();
-
-            return Ok(new { message = "Habitación actualizada exitosamente." });
-
-        }
-        */
+        
 
         [HttpDelete("deleteRoom/{RoomId}")]
         public async Task<ActionResult> DeleteRoom(int RoomId)
@@ -511,7 +510,7 @@ namespace Room.Me.Controllers
         }
 
 
-
+        [AllowAnonymous]
         [HttpGet("GetRooms")]
         public async Task<ActionResult> GetRooms(
             //Esto va a salir en el endpoint para pedir
