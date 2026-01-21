@@ -144,6 +144,7 @@ namespace Room.Me.Controllers
             var room = await _Context.Rooms
                 .Include(r => r.RoomFeatures)
                 .Include(r => r.Rules)
+                .Include(d => d.Media)
                 .FirstOrDefaultAsync(r => r.IdRoom == dto.Id && r.IdUserHost == userid);
 
             //No se encontro 
