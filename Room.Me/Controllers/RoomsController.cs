@@ -541,7 +541,7 @@ namespace Room.Me.Controllers
 
             if (priceRageHigh != null && priceRangelow != null)
             {
-                query = query.Where(r => r.Price < priceRageHigh && r.Price > priceRangelow);
+                query = query.Where(r => r.Price <= priceRageHigh && r.Price >= priceRangelow);
             }
 
 
@@ -575,6 +575,12 @@ namespace Room.Me.Controllers
                 r.Title,
                 r.Description,
                 r.Price,
+                r.Type,
+                r.address,
+                r.Bathrooms,
+                r.Bedrooms,
+                r.ParkingSpaces,
+                r.Surface,
                 Media = r.Media.Select(m => new
                 {
                     m.Id,
