@@ -385,6 +385,12 @@ namespace Room.Me.Controllers
                     user = new
                     {
                         user.Id,
+                        user.Email,
+                        user.Name,
+                        user.Surname,
+                        user.Age,
+                        user.Gender,
+                        imageUrl = user.ProfilePictureUrl,
                         Preferences = user.UserPreferences.Select(up => new
                         {
                             up.Preference.Id,
