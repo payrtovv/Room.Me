@@ -31,10 +31,10 @@ builder.Services.AddDbContext<RoomMeDbContext>(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVue", policy =>
-        policy.WithOrigins("http://localhost:3000") 
+        policy.WithOrigins("http://localhost:3000")
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials()); 
+              .AllowCredentials());
 });
 
 //Configuración de JWT
@@ -87,7 +87,7 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection(); 
+app.UseHttpsRedirection();
 
 app.UseCors("AllowVue");
 
@@ -97,5 +97,5 @@ app.UseAuthorization();
 
 // mapeo de controladores y hubs
 app.MapControllers();
-app.MapHub<ChatHub>("/chatHub"); 
+app.MapHub<ChatHub>("/chatHub");
 app.Run();

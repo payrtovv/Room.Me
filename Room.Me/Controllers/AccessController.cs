@@ -362,60 +362,44 @@ namespace Room.Me.Controllers
 
             }
         }
-        //Metodo para obtener la info de un User por ID
+
+        //obeter informacion de un usuario por Id
         [Authorize]
         [HttpGet("GetInfoUser/{Id}")]
         public async Task<IActionResult> GetInfoUser(int Id)
         {
             try
             {
-                //Buscamos usuario por Id
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == Id);
+                var user = await _context.Users
+                    .Include(u => u.UserPreferences)
+                        .ThenInclude(up => up.Preference)
+                    .FirstOrDefaultAsync(u => u.Id == Id);
 
-                //Si no se encuentra
-                if ( user == null)
+                if (user == null)
                 {
-                    return NotFound(new
-                    {
-                        message = "Usuario no encontrado"
-                    });
+                    return NotFound(new { message = "Usuario no encontrado" });
                 }
-                else
+
+                return Ok(new
                 {
-                    //Si se encuentra 
-                    return Ok(new
+                    user = new
                     {
-                        user = new
+                        user.Id,
+                        Preferences = user.UserPreferences.Select(up => new
                         {
-                            user.Id,
-                            user.Email,
-                            user.Name,
-                            user.Surname,
-                            user.Age,
-                            user.Gender,
-                            imageUrl = user.ProfilePictureUrl,
-                            Preferences = _context.UserPreferences
-                                .Where(up => up.UserId == user.Id)
-                                .Select(up => new
-                                {
-                                    up.Preference.Id,
-                                    up.Preference.Category,
-                                    up.Preference.Value,
-                                    up.Preference.Label
-                                }).ToList()
-                        }
-                    });
-                }
-
-            }catch(Exception Ex)
-            {
-                return StatusCode(500, new
-                {
-                    message = "Ocurrió un error interno. Inténtalo más tarde."
+                            up.Preference.Id,
+                            up.Preference.Label
+                        }).ToList()
+                    }
                 });
             }
-           
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Ocurrió un error interno." });
+            }
         }
+
+
 
         [Authorize]
         [HttpGet("GetLocalUser")]
