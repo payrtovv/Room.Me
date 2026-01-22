@@ -363,7 +363,7 @@ namespace Room.Me.Controllers
             }
         }
 
-        //obeter informacion de un usuario por Id
+        // metodo para obeter informacion de un usuario por Id
         [Authorize]
         [HttpGet("GetInfoUser/{Id}")]
         public async Task<IActionResult> GetInfoUser(int Id)
