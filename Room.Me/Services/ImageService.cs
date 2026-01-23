@@ -20,7 +20,26 @@ namespace Room.Me.Services
             _containerClient.CreateIfNotExists(PublicAccessType.Blob);
 
         }
+        public async Task<bool> DeleteImageAsync(string imageUrl)
+        {
+            if (string.IsNullOrEmpty(imageUrl)) return false;
 
+            try
+            {
+                var uri = new Uri(imageUrl);
+                string fileName = Path.GetFileName(uri.LocalPath);
+
+                // obtener le cliente
+                var blobClient = _containerClient.GetBlobClient(fileName);
+
+                // elimina el archivo del azure
+                return await blobClient.DeleteIfExistsAsync();
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
         public async Task<string> UploadImageAsync(IFormFile file)
         {
             if (file == null || file.Length == 0) return null;

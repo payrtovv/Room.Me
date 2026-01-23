@@ -135,23 +135,20 @@ namespace Room.Me.Controllers
         }
 
         [HttpPost("updateRoom")]
-        public async Task<ActionResult> updateRoom(UpdateRoomDto dto)
+        public async Task<ActionResult> updateRoom([FromForm] UpdateRoomDto dto) 
         {
-            //Sacamos el id del user
             var userid = GetUserId();
 
-            //buscamos la habitacion del dto y vemos si le pertenece
             var room = await _Context.Rooms
                 .Include(r => r.RoomFeatures)
                 .Include(r => r.Rules)
-                .Include(d => d.Media)
+                .Include(r => r.Media)
                 .FirstOrDefaultAsync(r => r.IdRoom == dto.Id && r.IdUserHost == userid);
 
-            //No se encontro 
             if (room == null)
                 return NotFound(new { message = "Habitación no encontrada o no autorizada." });
 
-            // Actualizar los campos de la habitación
+            // actualizar campos
             room.Title = dto.Title;
             room.Description = dto.Description;
             room.Type = dto.Type;
@@ -164,95 +161,81 @@ namespace Room.Me.Controllers
             room.Surface = dto.Surface;
             room.Price = dto.Price;
 
-
-            // Eliminamos características que ya no están en la lista
+            // sinronización con features
             var featuresToRemove = room.RoomFeatures
-                .Where(rf => !dto.FeatureIds.Contains(rf.FeatureId)) //Las que no tengan el id del dto
+                .Where(rf => !dto.FeatureIds.Contains(rf.FeatureId))
                 .ToList();
+            _Context.RoomFeatures.RemoveRange(featuresToRemove);
 
-            _Context.RoomFeatures.RemoveRange(featuresToRemove); //las quitamos de la base de datos
-
-            // Agregar nuevas características
             foreach (var featureid in dto.FeatureIds)
             {
-                //si no existe la caracteristica, la agregamos
                 if (!room.RoomFeatures.Any(rf => rf.FeatureId == featureid))
                 {
-                    room.RoomFeatures.Add(new RoomFeature
-                    {
-                        FeatureId = featureid
-                    });
+                    room.RoomFeatures.Add(new RoomFeature { FeatureId = featureid });
                 }
             }
 
-            //Hacemos una lista que tenga la media que se va a eliminar
-            var MediaToremove = room.Media.Where(mr => !dto.Files.Contains(mr.Id)).ToList(); //devolvemos las que no estan en el dto
+            var filesToKeep = dto.Files ?? new List<int>();
 
-            //Las eliminamos
-            _Context.RoomMedia.RemoveRange(MediaToremove);
+            var mediaToRemove = room.Media
+                .Where(mr => !filesToKeep.Contains(mr.Id))
+                .ToList();
 
-            //Creamos una lista para las nuevas imagenes
-            var uploadedMedia = new List<RoomMedia>();
-
-            //recorremos las nuevas imagenes
-            foreach (var file in dto.NewFiles)
+            foreach (var media in mediaToRemove)
             {
-                //Las subimos con el servicio 
-                var url = await _imageService.UploadImageAsync(file);
 
-                if (!string.IsNullOrEmpty(url))
+                if (!string.IsNullOrEmpty(media.Url))
                 {
-                    uploadedMedia.Add(new RoomMedia
+                    await _imageService.DeleteImageAsync(media.Url);
+                }
+
+                // elimina de la db
+                _Context.RoomMedia.Remove(media);
+            }
+
+            // sube los nuevos archivos
+            if (dto.NewFiles != null && dto.NewFiles.Count > 0)
+            {
+                foreach (var file in dto.NewFiles)
+                {
+                    var url = await _imageService.UploadImageAsync(file);
+                    if (!string.IsNullOrEmpty(url))
                     {
-                        RoomId = dto.Id,
-                        Url = url,
-                        ContentType = file.ContentType
-                    });
+                        room.Media.Add(new RoomMedia
+                        {
+                            Url = url,
+                            ContentType = file.ContentType
+                        });
+                    }
                 }
             }
-            //Subimos las nuevas imagenes
-            await _Context.RoomMedia.AddRangeAsync(uploadedMedia);
-            await _Context.SaveChangesAsync();
 
-            //For each para revisar las reglas que manda el fron
-            foreach (var Rule in dto.Rules)
+            foreach (var ruleDto in dto.Rules)
             {
-                //buscamos si la regla ya existe en la base de datos
-                var existingRule = room.Rules.FirstOrDefault(r => r.Id == Rule.RuleId);
-                //si existe, actualizamos el nombre
+                var existingRule = room.Rules.FirstOrDefault(r => r.Id == ruleDto.RuleId);
                 if (existingRule != null)
                 {
-                    existingRule.Name = Rule.RuleName;
+                    existingRule.Name = ruleDto.RuleName;
                 }
                 else
-
-                    //si no existe, la agregamios
+                {
                     room.Rules.Add(new Rule
                     {
-                        Name = Rule.RuleName,
+                        Name = ruleDto.RuleName,
                         CreatedByUserId = userid,
                     });
+                }
             }
 
-            //buscamos las reglas que ya no estan en el dto para eliminarlas
-            var ruleIdsFromDto = dto.Rules
-                //Como puede venir una regla nueva sin id, filtramos los nulos
-                .Where(r => r.RuleId != null)
-                .Select(r => r.RuleId)
-                .ToList();
-            //lista de reglas a eliminar
+            var ruleIdsFromDto = dto.Rules.Where(r => r.RuleId > 0).Select(r => r.RuleId).ToList();
             var rulesToDelete = room.Rules
-                //Si la regla en la base de datos no esta en la lista del dto, la eliminamos
-                //mayor a 0 por que las que se agregan apenas estan con id 0 temporalmente
                 .Where(r => r.Id > 0 && !ruleIdsFromDto.Contains(r.Id))
                 .ToList();
-
             _Context.Rules.RemoveRange(rulesToDelete);
 
             await _Context.SaveChangesAsync();
 
             return Ok(new { message = "Habitación actualizada exitosamente." });
-
         }
 
         //Para habitaciones propias
