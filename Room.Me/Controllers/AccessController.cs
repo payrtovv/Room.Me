@@ -515,5 +515,73 @@ namespace Room.Me.Controllers
                 return null;
             }
         }
+        // cambiar contraseña
+
+        // metodo para enviar codigo de recuperacion
+        // Post: api/Access/ForgotPassword
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "Usuario no encontrado" });
+            }
+
+            try
+            {
+                // generar código de verificación
+                string code = new Random().Next(1000, 9999).ToString();
+                user.VerificationCode = code;
+                user.CodeExpiration = DateTime.UtcNow.AddMinutes(10); 
+
+                await _context.SaveChangesAsync();
+
+                // enviar correo de recuperación
+                await _emailService.SendEmailCode(dto.Email, code);
+
+                return Ok(new { message = "Código de recuperación enviado a tu correo." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Error al enviar el correo", error = ex.Message });
+            }
+        }
+
+
+        // metodo para resetear la contraseña
+        // Post: api/Access/ResetPassword
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "Usuario no encontrado" });
+            }
+
+            // aca se valdia el codigo
+            if (user.VerificationCode != dto.Code || user.CodeExpiration < DateTime.UtcNow)
+            {
+                return BadRequest(new { message = "El código es inválido o ha expirado." });
+            }
+
+            // se hashea la nueva contraseña
+            var hasher = new PasswordHasher<User>();
+            user.Password = hasher.HashPassword(user, dto.NewPassword);
+            user.VerificationCode = null;
+            user.CodeExpiration = null;
+            // verificar al usuario si no lo estaba
+            user.IsVerified = true; 
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Contraseña actualizada con éxito." });
+        }
+
     }
 }
