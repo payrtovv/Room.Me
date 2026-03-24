@@ -1,6 +1,6 @@
 # Room.me - Backend & Web App
 
-**Room.me** es una plataforma diseñada para conectar a personas que buscan compañeros de cuarto de forma segura y eficiente. El enfoque principal del proyecto es la gestión de perfiles, geolocalización y autenticación robusta.
+**Room.me** es una plataforma diseñada para conectar a personas que buscan compañeros de cuarto de forma segura y eficiente. El enfoque principal del proyecto es la gestión de perfiles, geolocalización y autenticación.
 
 ---
 
