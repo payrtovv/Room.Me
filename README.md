@@ -23,11 +23,11 @@
 
 ## Características Principales
 
-- **Seguridad:** Implementación de autenticación y autorización mediante **JWT**.
+- **Seguridad:** Implementación de autenticación y autorización mediante JWT.
 - **Geolocalización:** Integración con la API de Google Maps para visualizar la ubicación de las habitaciones disponibles.
-- **Comunicación:** Sistema de envío de correos automáticos mediante **SendGrid** para confirmaciones de registro.
+- **Comunicación:** Sistema de envío de correos automáticos mediante SendGrid para confirmaciones de registro.
 - **Arquitectura:** Diseño de API REST siguiendo buenas prácticas y separación de responsabilidades.
-- **Persistencia:** Modelado de datos relacional optimizado en **SQL Server**.
+- **Persistencia:** Modelado de datos relacional optimizado en SQL Server.
 
 ---
 
@@ -35,11 +35,11 @@
 
 Aqui puedes ver cómo se ve la interfaz de usuario:
 
-![Pantalla Principal de Room.me](./ReadmeFotos/Room2.png)
+![Pantalla Principal de Room.me](Room.Me/ReadmeFotos/Room2.png) 
 
-![Pantalla de Inicio de Room.me](./ReadmeFotos/Room1.png)
+![Pantalla de Inicio de Room.me](Room.Me/ReadmeFotos/Room1.png)
 
 
-![Pantalla de Habitacion Room.me](./ReadmeFotos/Room5.png)
+![Pantalla de Habitacion Room.me](.Room.Me/ReadmeFotos/Room5.png)
 
-![Pantalla de Habitacion Room.me](./ReadmeFotos/Room3.png)
+![Pantalla de Habitacion Room.me](Room.Me/ReadmeFotos/Room3.png)
