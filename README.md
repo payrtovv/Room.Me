@@ -45,6 +45,6 @@ Pantalla de Inicio de Room.me
 
 Pantalla de Habitacion Room.me
 
-![Pantalla de Habitacion Room.me](.Room.Me/ReadmeFotos/Room5.png)
+![Pantalla de Habitacion Room.me](Room.Me/ReadmeFotos/Room5.png)
 
 ![Pantalla de Habitacion Room.me](Room.Me/ReadmeFotos/Room3.png)
