@@ -1,10 +1,10 @@
-# 🏠 Room.me - Backend & Web App
+# Room.me - Backend & Web App
 
 **Room.me** es una plataforma diseñada para conectar a personas que buscan compañeros de cuarto de forma segura y eficiente. El enfoque principal del proyecto es la gestión de perfiles, geolocalización y autenticación robusta.
 
 ---
 
-## 🚀 Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 ### Backend
 *   **Lenguaje:** C# (.NET Core)
@@ -21,7 +21,7 @@
 
 ---
 
-## 🛠️ Características Principales
+## Características Principales
 
 - **Seguridad:** Implementación de autenticación y autorización mediante **JWT**.
 - **Geolocalización:** Integración con la API de Google Maps para visualizar la ubicación de las habitaciones disponibles.
