@@ -35,10 +35,15 @@
 
 Aqui puedes ver cómo se ve la interfaz de usuario:
 
+Pantalla Principal de Room.me
+
 ![Pantalla Principal de Room.me](Room.Me/ReadmeFotos/Room2.png) 
+
+Pantalla de Inicio de Room.me
 
 ![Pantalla de Inicio de Room.me](Room.Me/ReadmeFotos/Room1.png)
 
+Pantalla de Habitacion Room.me
 
 ![Pantalla de Habitacion Room.me](.Room.Me/ReadmeFotos/Room5.png)
 
